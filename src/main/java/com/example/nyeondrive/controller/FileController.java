@@ -34,11 +34,6 @@ public class FileController {
         return "saveFile";
     }
 
-    /**
-     * 단일 파일 업로드에 사용
-     * 파일의 스트림을 그대로 스토리지로 전달
-     * @return File
-     */
     @PostMapping(value = "/upload", params = "mode=stream")
     public String streamUpload(
             @RequestHeader("File-Name") String fileName,
