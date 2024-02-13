@@ -6,6 +6,8 @@ import com.example.nyeondrive.service.FileService;
 import com.example.nyeondrive.service.StorageService;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -26,11 +28,7 @@ public class FileController {
 
     @PostMapping
     public String saveFile(@RequestBody FileRequestDto fileRequestDto) {
-        File file = File.builder()
-                .fileName(fileRequestDto.getName())
-                .parent(fileService.findFile(fileRequestDto.getParentId()).orElseThrow(RuntimeException::new))
-                .build();
-        fileService.saveFile(file);
+        fileService.saveFile(fileRequestDto);
         return "saveFile";
     }
 
@@ -42,7 +40,7 @@ public class FileController {
             @RequestHeader("Parent-Id") Long parentId,
             HttpServletRequest request
     ) throws IOException {
-        File parent = fileService.findFile(parentId).orElseThrow(RuntimeException::new);
+        File parent = fileService.findFile(parentId);
         File file = File.builder()
                 .fileName(fileName)
                 .contentType(contentType)
