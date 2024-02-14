@@ -17,5 +17,4 @@ public class StreamUploadRequestDto {
         this.contentLength = contentLength;
         this.parentId = parentId;
     }
-
 }

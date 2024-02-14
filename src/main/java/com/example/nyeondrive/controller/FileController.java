@@ -1,11 +1,13 @@
 package com.example.nyeondrive.controller;
 
-import com.example.nyeondrive.dto.request.FileRequestDto;
+import com.example.nyeondrive.dto.request.CreateFileRequestDto;
 import com.example.nyeondrive.entity.File;
 import com.example.nyeondrive.service.FileService;
 import com.example.nyeondrive.service.StorageService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import java.io.IOException;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/files")
+@Validated
 public class FileController {
     private final FileService fileService;
     private final StorageService storageService;
@@ -27,8 +30,8 @@ public class FileController {
 
 
     @PostMapping
-    public String saveFile(@RequestBody FileRequestDto fileRequestDto) {
-        fileService.saveFile(fileRequestDto);
+    public String saveFile(@Valid @RequestBody CreateFileRequestDto createFileRequestDto) {
+        fileService.saveFile(createFileRequestDto);
         return "saveFile";
     }
 
@@ -53,7 +56,7 @@ public class FileController {
         return "streamUpload";
     }
 
-    @PostMapping(value = "createRootFolder")
+    @PostMapping(value = "/createRootFolder")
     public String createRootFolder() {
         fileService.createRootFolder();
         return "createRootFolder";

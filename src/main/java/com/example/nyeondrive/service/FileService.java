@@ -1,6 +1,6 @@
 package com.example.nyeondrive.service;
 
-import com.example.nyeondrive.dto.request.FileRequestDto;
+import com.example.nyeondrive.dto.request.CreateFileRequestDto;
 import com.example.nyeondrive.entity.File;
 import com.example.nyeondrive.repository.FileRepository;
 import jakarta.transaction.Transactional;
@@ -19,9 +19,13 @@ public class FileService {
         fileRepository.saveFile(file);
     }
 
-    public void saveFile(FileRequestDto fileRequestDto) {
-        File parent = findFile(fileRequestDto.getParentId());
-        File file = File.builder().fileName(fileRequestDto.getName()).parent(parent).build();
+    public void saveFile(CreateFileRequestDto createFileRequestDto) {
+        File parent = findFile(createFileRequestDto.getParentId());
+        File file = File.builder()
+                .fileName(createFileRequestDto.getName())
+                .contentType(createFileRequestDto.getContentType())
+                .parent(parent)
+                .build();
         fileRepository.saveFile(file);
     }
 
