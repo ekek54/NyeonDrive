@@ -28,4 +28,9 @@ public class FileService {
     public File findFile(Long fileId) {
         return fileRepository.findFile(fileId).orElseThrow(() -> new RuntimeException("File not found"));
     }
+
+    public void createRootFolder() {
+        File root = File.createRootFolder();
+        fileRepository.saveFile(root);
+    }
 }

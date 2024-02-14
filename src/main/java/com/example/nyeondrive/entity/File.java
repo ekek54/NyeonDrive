@@ -11,16 +11,12 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Transient;
-import jakarta.servlet.http.Part;
 import java.io.InputStream;
 import java.util.List;
 import lombok.Builder;
-import lombok.Builder.Default;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.Fetch;
 
 @Entity
 @Getter
@@ -42,7 +38,6 @@ public class File {
     private Long size;
 
     @Column(name = "is_trashed")
-    @Default
     private boolean isTrashed = false;
 
     @JoinColumn(name = "parent_id")
@@ -61,12 +56,19 @@ public class File {
         this.name = new FileName(fileName);
         this.contentType = contentType;
         this.size = size;
-        if (!parent.isDirectory()) {
+        if (parent.isFile()) {
             throw new RuntimeException("Parent is not a directory");
         }
         this.parent = parent;
         this.inputStream = inputStream;
         this.isTrashed = isTrashed;
+    }
+
+    public static File createRootFolder() {
+        File file = new File();
+        file.setName("root");
+        file.setContentType("drive");
+        return file;
     }
 
     public void setName(String name) {

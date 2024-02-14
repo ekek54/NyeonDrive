@@ -52,4 +52,10 @@ public class FileController {
         storageService.uploadFile(file);
         return "streamUpload";
     }
+
+    @PostMapping(value = "createRootFolder")
+    public String createRootFolder() {
+        fileService.createRootFolder();
+        return "createRootFolder";
+    }
 }
