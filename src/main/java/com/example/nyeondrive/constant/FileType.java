@@ -1,7 +1,5 @@
 package com.example.nyeondrive.constant;
 
-import com.example.nyeondrive.vo.FileName;
-
 public enum FileType {
     FILE, DIRECTORY;
     public boolean isDirectory() {
@@ -12,7 +10,10 @@ public enum FileType {
         return this == FILE;
     }
 
-    public static FileType of(FileName name) {
-        return name.isDirectory() ? DIRECTORY : FILE;
+    public static FileType of(String contentType) {
+        if (contentType.equals("directory") || contentType.equals("drive")) {
+            return DIRECTORY;
+        }
+        return FILE;
     }
 }

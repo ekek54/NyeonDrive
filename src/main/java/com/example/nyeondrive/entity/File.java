@@ -69,10 +69,6 @@ public class File {
         this.isTrashed = isTrashed;
     }
 
-    public FileType getFileType() {
-        return FileType.of(name);
-    }
-
     public void setName(String name) {
         this.name = new FileName(name);
     }
@@ -85,10 +81,10 @@ public class File {
     }
 
     public boolean isFile() {
-        return getFileType() == FileType.FILE;
+        return FileType.of(contentType) == FileType.FILE;
     }
 
     public boolean isDirectory() {
-        return getFileType() == FileType.DIRECTORY;
+        return FileType.of(contentType) == FileType.DIRECTORY;
     }
 }
