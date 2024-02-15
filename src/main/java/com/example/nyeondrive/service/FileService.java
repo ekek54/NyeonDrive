@@ -5,6 +5,7 @@ import com.example.nyeondrive.dto.request.UpdateFileRequestDto;
 import com.example.nyeondrive.entity.File;
 import com.example.nyeondrive.repository.FileRepository;
 import jakarta.transaction.Transactional;
+import java.util.List;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -31,7 +32,7 @@ public class FileService {
     }
 
     public File findFile(Long fileId) {
-        return fileRepository.findFile(fileId).orElseThrow(() -> new RuntimeException("File not found"));
+        return fileRepository.findById(fileId).orElseThrow(() -> new RuntimeException("File not found"));
     }
 
     public void createRootFolder() {

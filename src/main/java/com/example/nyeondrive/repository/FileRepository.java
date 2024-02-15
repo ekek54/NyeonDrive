@@ -17,7 +17,7 @@ public class FileRepository {
         em.persist(file);
     }
 
-    public Optional<File> findFile(Long fileId) {
+    public Optional<File> findById(Long fileId) {
         return Optional.ofNullable(em.find(File.class, fileId));
     }
 }
