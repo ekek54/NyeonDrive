@@ -11,5 +11,5 @@ public class CreateFileRequestDto {
     private Long parentId;
     @NotNull
     private String contentType;
-    private boolean isTrashed = false;
+    private boolean isTrashed;
 }
