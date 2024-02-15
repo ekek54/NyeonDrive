@@ -1,6 +1,7 @@
 package com.example.nyeondrive.service;
 
 import com.example.nyeondrive.dto.request.CreateFileRequestDto;
+import com.example.nyeondrive.dto.request.UpdateFileRequestDto;
 import com.example.nyeondrive.entity.File;
 import com.example.nyeondrive.repository.FileRepository;
 import jakarta.transaction.Transactional;
@@ -36,5 +37,23 @@ public class FileService {
     public void createRootFolder() {
         File root = File.createRootFolder();
         fileRepository.saveFile(root);
+    }
+
+public void updateFile(Long fileId, UpdateFileRequestDto updateFileRequestDto) {
+        File file = findFile(fileId);
+        if (updateFileRequestDto.getName() != null) {
+            file.setName(updateFileRequestDto.getName());
+        }
+        if (updateFileRequestDto.getParentId() != null) {
+            File parent = findFile(updateFileRequestDto.getParentId());
+            file.setParent(parent);
+        }
+        if (updateFileRequestDto.getContentType() != null) {
+            file.setContentType(updateFileRequestDto.getContentType());
+        }
+        if (updateFileRequestDto.getIsTrashed() != null) {
+            file.setTrashed(updateFileRequestDto.getIsTrashed());
+        }
+        fileRepository.saveFile(file);
     }
 }

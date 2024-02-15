@@ -1,6 +1,7 @@
 package com.example.nyeondrive.controller;
 
 import com.example.nyeondrive.dto.request.CreateFileRequestDto;
+import com.example.nyeondrive.dto.request.UpdateFileRequestDto;
 import com.example.nyeondrive.entity.File;
 import com.example.nyeondrive.service.FileService;
 import com.example.nyeondrive.service.StorageService;
@@ -33,6 +34,15 @@ public class FileController {
     public String saveFile(@Valid @RequestBody CreateFileRequestDto createFileRequestDto) {
         fileService.saveFile(createFileRequestDto);
         return "saveFile";
+    }
+
+    @PatchMapping(path = "/{fileId}")
+    public String updateFile(
+            @PathVariable("fileId") Long fileId,
+            @RequestBody UpdateFileRequestDto updateFileRequestDto
+    ) {
+        fileService.updateFile(fileId, updateFileRequestDto);
+        return "updateFile";
     }
 
     @PostMapping(value = "/upload", params = "mode=stream")
