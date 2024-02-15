@@ -27,11 +27,8 @@ public class FileName {
         }
     }
 
-    public FileName changeName(String name) {
-        return new FileName(name, this.extension);
-    }
-
-    public boolean isDirectory() {
-        return this.extension.isEmpty();
+    @Override
+    public String toString() {
+        return this.name + "." + this.extension;
     }
 }
