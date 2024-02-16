@@ -3,22 +3,21 @@ package com.example.nyeondrive.service;
 import com.example.nyeondrive.dto.request.CreateFileRequestDto;
 import com.example.nyeondrive.dto.request.UpdateFileRequestDto;
 import com.example.nyeondrive.entity.File;
-import com.example.nyeondrive.repository.JpaFileRepository;
+import com.example.nyeondrive.repository.FileRepository;
 import jakarta.transaction.Transactional;
-import java.util.List;
 import org.springframework.stereotype.Service;
 
 @Service
 @Transactional
 public class FileService {
-    private final JpaFileRepository jpaFileRepository;
+    private final FileRepository fileRepository;
 
-    public FileService(JpaFileRepository jpaFileRepository) {
-        this.jpaFileRepository = jpaFileRepository;
+    public FileService(FileRepository fileRepository) {
+        this.fileRepository = fileRepository;
     }
 
-        jpaFileRepository.saveFile(file);
     public void createFile(File file) {
+        fileRepository.save(file);
     }
 
     public void createFile(CreateFileRequestDto createFileRequestDto) {
@@ -28,19 +27,19 @@ public class FileService {
                 .contentType(createFileRequestDto.getContentType())
                 .parent(parent)
                 .build();
-        jpaFileRepository.saveFile(file);
+        fileRepository.save(file);
     }
 
     public File findFile(Long fileId) {
-        return jpaFileRepository.findById(fileId).orElseThrow(() -> new RuntimeException("File not found"));
+        return fileRepository.findById(fileId).orElseThrow(() -> new RuntimeException("File not found"));
     }
 
     public void createRootFolder() {
         File root = File.createRootFolder();
-        jpaFileRepository.saveFile(root);
+        fileRepository.save(root);
     }
 
-public void updateFile(Long fileId, UpdateFileRequestDto updateFileRequestDto) {
+    public void updateFile(Long fileId, UpdateFileRequestDto updateFileRequestDto) {
         File file = findFile(fileId);
         if (updateFileRequestDto.getName() != null) {
             file.setName(updateFileRequestDto.getName());
@@ -55,6 +54,6 @@ public void updateFile(Long fileId, UpdateFileRequestDto updateFileRequestDto) {
         if (updateFileRequestDto.getIsTrashed() != null) {
             file.setTrashed(updateFileRequestDto.getIsTrashed());
         }
-        jpaFileRepository.saveFile(file);
+        fileRepository.save(file);
     }
 }
