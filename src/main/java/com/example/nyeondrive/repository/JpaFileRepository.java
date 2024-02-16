@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 @Repository
 @RequiredArgsConstructor
-public class FileRepository {
+public class JpaFileRepository {
     @PersistenceContext
     private EntityManager em;
 
