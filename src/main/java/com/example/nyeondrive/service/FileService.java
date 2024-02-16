@@ -17,11 +17,11 @@ public class FileService {
         this.jpaFileRepository = jpaFileRepository;
     }
 
-    public void saveFile(File file) {
         jpaFileRepository.saveFile(file);
+    public void createFile(File file) {
     }
 
-    public void saveFile(CreateFileRequestDto createFileRequestDto) {
+    public void createFile(CreateFileRequestDto createFileRequestDto) {
         File parent = findFile(createFileRequestDto.getParentId());
         File file = File.builder()
                 .fileName(createFileRequestDto.getName())

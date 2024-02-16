@@ -34,7 +34,7 @@ public class FileController {
 
     @PostMapping
     public String saveFile(@Valid @RequestBody CreateFileRequestDto createFileRequestDto) {
-        fileService.saveFile(createFileRequestDto);
+        fileService.createFile(createFileRequestDto);
         return "saveFile";
     }
 
@@ -63,7 +63,7 @@ public class FileController {
                 .parent(parent)
                 .inputStream(request.getInputStream())
                 .build();
-        fileService.saveFile(file);
+        fileService.createFile(file);
         storageService.uploadFile(file);
         return "streamUpload";
     }
