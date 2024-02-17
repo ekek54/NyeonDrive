@@ -1,10 +1,12 @@
 package com.example.nyeondrive.service;
 
+import com.example.nyeondrive.controller.FileFilterDto;
 import com.example.nyeondrive.dto.request.CreateFileRequestDto;
 import com.example.nyeondrive.dto.request.UpdateFileRequestDto;
 import com.example.nyeondrive.entity.File;
 import com.example.nyeondrive.repository.FileRepository;
 import jakarta.transaction.Transactional;
+import java.util.List;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -56,4 +58,9 @@ public class FileService {
         }
         fileRepository.save(file);
     }
+
+    public List<File> listFile(FileFilterDto fileFilterDto) {
+        return fileRepository.findAllWithFilter(fileFilterDto);
+    }
+
 }

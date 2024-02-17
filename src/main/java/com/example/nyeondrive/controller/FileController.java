@@ -9,8 +9,10 @@ import com.example.nyeondrive.service.StorageService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.io.IOException;
+import java.util.List;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -79,5 +81,9 @@ public class FileController {
         return GetFileResponseDto.of(fileService.findFile(fileId));
     }
 
+    @GetMapping
+    public List<GetFileResponseDto> listFile(@ModelAttribute FileFilterDto fileFilterDto) {
+        return fileService.listFile(fileFilterDto).stream().map(GetFileResponseDto::of).toList();
+    }
 
 }
