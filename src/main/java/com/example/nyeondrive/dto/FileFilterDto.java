@@ -1,4 +1,4 @@
-package com.example.nyeondrive.controller;
+package com.example.nyeondrive.dto;
 
 public record FileFilterDto(
     String name,

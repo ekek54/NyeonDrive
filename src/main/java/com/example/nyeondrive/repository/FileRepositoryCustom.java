@@ -1,6 +1,6 @@
 package com.example.nyeondrive.repository;
 
-import com.example.nyeondrive.controller.FileFilterDto;
+import com.example.nyeondrive.dto.FileFilterDto;
 import com.example.nyeondrive.entity.File;
 import java.util.List;
 
