@@ -29,7 +29,7 @@ public class File {
     private Long id;
 
     @Embedded
-    private FileName name;
+    private FileName fileName;
 
     @Column(name = "content_type")
     private String contentType;
@@ -53,7 +53,7 @@ public class File {
     @Builder
     public File(String fileName, String contentType, Long size, File parent, InputStream inputStream,
                 boolean isTrashed) {
-        this.name = new FileName(fileName);
+        this.fileName = new FileName(fileName);
         this.contentType = contentType;
         this.size = size;
         if (parent.isFile()) {
@@ -66,13 +66,13 @@ public class File {
 
     public static File createRootFolder() {
         File file = new File();
-        file.setName("root");
+        file.setFileName("root");
         file.setContentType("drive");
         return file;
     }
 
-    public void setName(String name) {
-        this.name = new FileName(name);
+    public void setFileName(String fileName) {
+        this.fileName = new FileName(fileName);
     }
 
     public void setParent(File parent) {

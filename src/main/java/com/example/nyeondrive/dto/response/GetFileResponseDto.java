@@ -20,6 +20,6 @@ public class GetFileResponseDto {
     }
 
     public static GetFileResponseDto of(File file) {
-        return new GetFileResponseDto(file.getId(), file.getName().toString(), file.getParent().getId(), file.getContentType(), file.isTrashed());
+        return new GetFileResponseDto(file.getId(), file.getFileName().toString(), file.getParent().getId(), file.getContentType(), file.isTrashed());
     }
 }

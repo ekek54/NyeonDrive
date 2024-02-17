@@ -42,7 +42,7 @@ public class FileService {
     public void updateFile(Long fileId, UpdateFileRequestDto updateFileRequestDto) {
         File file = findFile(fileId);
         if (updateFileRequestDto.getName() != null) {
-            file.setName(updateFileRequestDto.getName());
+            file.setFileName(updateFileRequestDto.getName());
         }
         if (updateFileRequestDto.getParentId() != null) {
             File parent = findFile(updateFileRequestDto.getParentId());
