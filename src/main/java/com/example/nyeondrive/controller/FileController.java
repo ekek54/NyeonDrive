@@ -36,9 +36,9 @@ public class FileController {
 
 
     @PostMapping
-    public String saveFile(@Valid @RequestBody CreateFileRequestDto createFileRequestDto) {
+    public String createFile(@Valid @RequestBody CreateFileRequestDto createFileRequestDto) {
         fileService.createFile(createFileRequestDto);
-        return "saveFile";
+        return "createFile";
     }
 
     @PatchMapping(path = "/{fileId}")
