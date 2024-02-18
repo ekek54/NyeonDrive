@@ -3,9 +3,12 @@ package com.example.nyeondrive.repository;
 import static com.example.nyeondrive.entity.QFile.file;
 
 import com.example.nyeondrive.dto.FileFilterDto;
+import com.example.nyeondrive.dto.FilePagingDto;
 import com.example.nyeondrive.entity.File;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import java.util.List;
 import org.springframework.stereotype.Repository;
 
@@ -18,7 +21,8 @@ public class FileRepositoryCustomImpl implements FileRepositoryCustom {
     }
 
     @Override
-    public List<File> findAllWithFilter(FileFilterDto fileFilterDto) {
+    public List<File> findAllWithFilterAndPaging(FileFilterDto fileFilterDto, FilePagingDto filePagingDto) {
+        Pageable pageable = PageRequest.of(filePagingDto.page(), filePagingDto.size());
         return queryFactory
                 .select(file)
                 .from(file)
@@ -28,6 +32,8 @@ public class FileRepositoryCustomImpl implements FileRepositoryCustom {
                         contentTypeEq(fileFilterDto.contentType()),
                         isTrashedEq(fileFilterDto.isTrashed())
                 )
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
                 .fetch();
     }
 

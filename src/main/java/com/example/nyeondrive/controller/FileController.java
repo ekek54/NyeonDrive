@@ -1,7 +1,9 @@
 package com.example.nyeondrive.controller;
 
 import com.example.nyeondrive.dto.FileFilterDto;
+import com.example.nyeondrive.dto.FilePagingDto;
 import com.example.nyeondrive.dto.request.CreateFileRequestDto;
+import com.example.nyeondrive.dto.request.ListFileRequestDto;
 import com.example.nyeondrive.dto.request.UpdateFileRequestDto;
 import com.example.nyeondrive.dto.response.GetFileResponseDto;
 import com.example.nyeondrive.entity.File;
@@ -83,8 +85,10 @@ public class FileController {
     }
 
     @GetMapping
-    public List<GetFileResponseDto> listFile(@ModelAttribute FileFilterDto fileFilterDto) {
-        return fileService.listFile(fileFilterDto).stream().map(GetFileResponseDto::of).toList();
+    public List<GetFileResponseDto> listFile(@ModelAttribute ListFileRequestDto ListFileRequestDto) {
+        FileFilterDto fileFilterDto = ListFileRequestDto.toFileFilterDto();
+        FilePagingDto filePagingDto = ListFileRequestDto.toFilePagingDto();
+        return fileService.listFile(fileFilterDto, filePagingDto).stream().map(GetFileResponseDto::of).toList();
     }
 
 }

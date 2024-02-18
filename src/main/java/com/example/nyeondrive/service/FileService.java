@@ -1,6 +1,7 @@
 package com.example.nyeondrive.service;
 
 import com.example.nyeondrive.dto.FileFilterDto;
+import com.example.nyeondrive.dto.FilePagingDto;
 import com.example.nyeondrive.dto.request.CreateFileRequestDto;
 import com.example.nyeondrive.dto.request.UpdateFileRequestDto;
 import com.example.nyeondrive.entity.File;
@@ -59,8 +60,8 @@ public class FileService {
         fileRepository.save(file);
     }
 
-    public List<File> listFile(FileFilterDto fileFilterDto) {
-        return fileRepository.findAllWithFilter(fileFilterDto);
+    public List<File> listFile(FileFilterDto fileFilterDto, FilePagingDto filePagingDto) {
+        return fileRepository.findAllWithFilterAndPaging(fileFilterDto, filePagingDto);
     }
 
 }
