@@ -1,5 +1,6 @@
 package com.example.nyeondrive.controller;
 
+import com.example.nyeondrive.dto.service.CreateFileDto;
 import com.example.nyeondrive.dto.service.FileFilterDto;
 import com.example.nyeondrive.dto.service.FilePagingDto;
 import com.example.nyeondrive.dto.request.CreateFileRequestDto;
@@ -39,7 +40,8 @@ public class FileController {
 
     @PostMapping
     public String createFile(@Valid @RequestBody CreateFileRequestDto createFileRequestDto) {
-        fileService.createFile(createFileRequestDto);
+        CreateFileDto createFileDto = createFileRequestDto.toCreateFileDto();
+        fileService.createFile(createFileDto);
         return "createFile";
     }
 

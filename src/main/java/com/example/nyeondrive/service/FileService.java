@@ -1,5 +1,6 @@
 package com.example.nyeondrive.service;
 
+import com.example.nyeondrive.dto.service.CreateFileDto;
 import com.example.nyeondrive.dto.service.FileFilterDto;
 import com.example.nyeondrive.dto.service.FilePagingDto;
 import com.example.nyeondrive.dto.request.CreateFileRequestDto;
@@ -23,11 +24,11 @@ public class FileService {
         fileRepository.save(file);
     }
 
-    public void createFile(CreateFileRequestDto createFileRequestDto) {
-        File parent = findFile(createFileRequestDto.getParentId());
+    public void createFile(CreateFileDto createFileDto) {
+        File parent = findFile(createFileDto.parentId());
         File file = File.builder()
-                .fileName(createFileRequestDto.getName())
-                .contentType(createFileRequestDto.getContentType())
+                .fileName(createFileDto.name())
+                .contentType(createFileDto.contentType())
                 .parent(parent)
                 .build();
         fileRepository.save(file);
