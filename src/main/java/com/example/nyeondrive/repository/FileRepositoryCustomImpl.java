@@ -2,8 +2,8 @@ package com.example.nyeondrive.repository;
 
 import static com.example.nyeondrive.entity.QFile.file;
 
-import com.example.nyeondrive.dto.FileFilterDto;
-import com.example.nyeondrive.dto.FilePagingDto;
+import com.example.nyeondrive.dto.service.FileFilterDto;
+import com.example.nyeondrive.dto.service.FilePagingDto;
 import com.example.nyeondrive.entity.File;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;

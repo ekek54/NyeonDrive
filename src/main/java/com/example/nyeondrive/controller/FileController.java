@@ -1,7 +1,7 @@
 package com.example.nyeondrive.controller;
 
-import com.example.nyeondrive.dto.FileFilterDto;
-import com.example.nyeondrive.dto.FilePagingDto;
+import com.example.nyeondrive.dto.service.FileFilterDto;
+import com.example.nyeondrive.dto.service.FilePagingDto;
 import com.example.nyeondrive.dto.request.CreateFileRequestDto;
 import com.example.nyeondrive.dto.request.ListFileRequestDto;
 import com.example.nyeondrive.dto.request.UpdateFileRequestDto;

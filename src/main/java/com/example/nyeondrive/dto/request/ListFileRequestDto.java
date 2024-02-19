@@ -1,7 +1,7 @@
 package com.example.nyeondrive.dto.request;
 
-import com.example.nyeondrive.dto.FileFilterDto;
-import com.example.nyeondrive.dto.FilePagingDto;
+import com.example.nyeondrive.dto.service.FileFilterDto;
+import com.example.nyeondrive.dto.service.FilePagingDto;
 
 public record ListFileRequestDto(
         String name,

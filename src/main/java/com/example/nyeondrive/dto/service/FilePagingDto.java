@@ -1,4 +1,4 @@
-package com.example.nyeondrive.dto;
+package com.example.nyeondrive.dto.service;
 
 import com.example.nyeondrive.dto.request.ListFileRequestDto;
 
