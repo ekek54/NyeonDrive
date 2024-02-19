@@ -1,7 +1,11 @@
 package com.example.nyeondrive.constant;
 
+import java.util.List;
+
 public enum FileType {
     FILE, DIRECTORY;
+    private static final List<String> directoryContentTypes = List.of("directory", "drive", "folder");
+
     public boolean isDirectory() {
         return this == DIRECTORY;
     }
@@ -11,7 +15,7 @@ public enum FileType {
     }
 
     public static FileType of(String contentType) {
-        if (contentType.equals("directory") || contentType.equals("drive")) {
+        if (directoryContentTypes.contains(contentType)) {
             return DIRECTORY;
         }
         return FILE;
