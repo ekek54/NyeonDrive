@@ -3,8 +3,7 @@ package com.example.nyeondrive.service;
 import com.example.nyeondrive.dto.service.CreateFileDto;
 import com.example.nyeondrive.dto.service.FileFilterDto;
 import com.example.nyeondrive.dto.service.FilePagingDto;
-import com.example.nyeondrive.dto.request.CreateFileRequestDto;
-import com.example.nyeondrive.dto.request.UpdateFileRequestDto;
+import com.example.nyeondrive.dto.service.UpdateFileDto;
 import com.example.nyeondrive.entity.File;
 import com.example.nyeondrive.repository.FileRepository;
 import jakarta.transaction.Transactional;
@@ -44,20 +43,20 @@ public class FileService {
         fileRepository.save(root);
     }
 
-    public void updateFile(Long fileId, UpdateFileRequestDto updateFileRequestDto) {
+    public void updateFile(Long fileId, UpdateFileDto updateFileDto) {
         File file = findFile(fileId);
-        if (updateFileRequestDto.getName() != null) {
-            file.setFileName(updateFileRequestDto.getName());
+        if (updateFileDto.name() != null) {
+            file.setFileName(updateFileDto.name());
         }
-        if (updateFileRequestDto.getParentId() != null) {
-            File parent = findFile(updateFileRequestDto.getParentId());
+        if (updateFileDto.parentId() != null) {
+            File parent = findFile(updateFileDto.parentId());
             file.setParent(parent);
         }
-        if (updateFileRequestDto.getContentType() != null) {
-            file.setContentType(updateFileRequestDto.getContentType());
+        if (updateFileDto.contentType() != null) {
+            file.setContentType(updateFileDto.contentType());
         }
-        if (updateFileRequestDto.getIsTrashed() != null) {
-            file.setTrashed(updateFileRequestDto.getIsTrashed());
+        if (updateFileDto.isTrashed() != null) {
+            file.setTrashed(updateFileDto.isTrashed());
         }
         fileRepository.save(file);
     }

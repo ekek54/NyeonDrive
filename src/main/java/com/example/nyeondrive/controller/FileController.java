@@ -7,6 +7,7 @@ import com.example.nyeondrive.dto.request.CreateFileRequestDto;
 import com.example.nyeondrive.dto.request.ListFileRequestDto;
 import com.example.nyeondrive.dto.request.UpdateFileRequestDto;
 import com.example.nyeondrive.dto.response.GetFileResponseDto;
+import com.example.nyeondrive.dto.service.UpdateFileDto;
 import com.example.nyeondrive.entity.File;
 import com.example.nyeondrive.service.FileService;
 import com.example.nyeondrive.service.StorageService;
@@ -50,7 +51,8 @@ public class FileController {
             @PathVariable("fileId") Long fileId,
             @RequestBody UpdateFileRequestDto updateFileRequestDto
     ) {
-        fileService.updateFile(fileId, updateFileRequestDto);
+        UpdateFileDto updateFileDto = updateFileRequestDto.toUpdateFileDto();
+        fileService.updateFile(fileId, updateFileDto);
         return "updateFile";
     }
 
