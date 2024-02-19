@@ -30,6 +30,7 @@ public class FileService {
                 .fileName(createFileDto.name())
                 .contentType(createFileDto.contentType())
                 .parent(parent)
+                .isTrashed(createFileDto.isTrashed())
                 .build();
         fileRepository.save(file);
     }
