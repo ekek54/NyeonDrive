@@ -1,12 +1,13 @@
 package com.example.nyeondrive.controller;
 
-import com.example.nyeondrive.dto.service.CreateFileDto;
-import com.example.nyeondrive.dto.service.FileFilterDto;
-import com.example.nyeondrive.dto.service.FilePagingDto;
 import com.example.nyeondrive.dto.request.CreateFileRequestDto;
 import com.example.nyeondrive.dto.request.ListFileRequestDto;
 import com.example.nyeondrive.dto.request.UpdateFileRequestDto;
 import com.example.nyeondrive.dto.response.GetFileResponseDto;
+import com.example.nyeondrive.dto.service.CreateFileDto;
+import com.example.nyeondrive.dto.service.FileFilterDto;
+import com.example.nyeondrive.dto.service.FileOrderDto;
+import com.example.nyeondrive.dto.service.FilePagingDto;
 import com.example.nyeondrive.dto.service.UpdateFileDto;
 import com.example.nyeondrive.entity.File;
 import com.example.nyeondrive.service.FileService;
@@ -92,7 +93,9 @@ public class FileController {
     public List<GetFileResponseDto> listFile(@ModelAttribute ListFileRequestDto ListFileRequestDto) {
         FileFilterDto fileFilterDto = ListFileRequestDto.toFileFilterDto();
         FilePagingDto filePagingDto = ListFileRequestDto.toFilePagingDto();
-        return fileService.listFile(fileFilterDto, filePagingDto).stream().map(GetFileResponseDto::of).toList();
+        List<FileOrderDto> fileOrderDtos = ListFileRequestDto.toFileOrderDtos();
+        return fileService.listFile(fileFilterDto, filePagingDto, fileOrderDtos).stream()
+                .map(GetFileResponseDto::of)
+                .toList();
     }
-
 }
