@@ -3,7 +3,9 @@ package com.example.nyeondrive.dto.request;
 import com.example.nyeondrive.dto.service.FileFilterDto;
 import com.example.nyeondrive.dto.service.FileOrderDto;
 import com.example.nyeondrive.dto.service.FilePagingDto;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public record ListFileRequestDto(
         String name,
@@ -14,6 +16,8 @@ public record ListFileRequestDto(
         Integer size,
         List<String> orderBy
 ) {
+    public static Set<String> allowedOrderBy = Set.of("id", "name", "extension", "size", "isTrashed");
+
     public FilePagingDto toFilePagingDto() {
         return new FilePagingDto(page(), size());
     }
@@ -21,6 +25,7 @@ public record ListFileRequestDto(
     public FileFilterDto toFileFilterDto() {
         return new FileFilterDto(name(), parentId(), contentType(), isTrashed());
     }
+
     public List<FileOrderDto> toFileOrderDtos() {
         return orderBy().stream()
                 .map(this::toFilerOrderDto)
@@ -29,6 +34,9 @@ public record ListFileRequestDto(
 
     private FileOrderDto toFilerOrderDto(String orderBy) {
         String[] split = orderBy.split(" ");
+        if (!allowedOrderBy.contains(split[0])) {
+            throw new IllegalArgumentException("Invalid orderBy");
+        }
         if (split.length == 1) {
             return new FileOrderDto(split[0], "asc");
         }
