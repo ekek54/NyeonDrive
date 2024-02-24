@@ -41,7 +41,7 @@ public class FileController {
 
 
     @PostMapping
-    public String createFile(@Valid @RequestBody CreateFileRequestDto createFileRequestDto) {
+    public String createFile(@Validated @RequestBody CreateFileRequestDto createFileRequestDto) {
         CreateFileDto createFileDto = createFileRequestDto.toCreateFileDto();
         fileService.createFile(createFileDto);
         return "createFile";

@@ -2,24 +2,29 @@ package com.example.nyeondrive.dto.request;
 
 import com.example.nyeondrive.dto.service.CreateFileDto;
 import jakarta.validation.constraints.NotNull;
-import lombok.Getter;
 
-@Getter
-public class CreateFileRequestDto {
+public record CreateFileRequestDto (
     @NotNull
-    private String name;
+    String name,
     @NotNull
-    private Long parentId;
+    Long parentId,
     @NotNull
-    private String contentType;
-    private boolean isTrashed;
-
+    String contentType,
+    Boolean isTrashed
+) {
     public CreateFileDto toCreateFileDto() {
         return new CreateFileDto(
             name,
             parentId,
             contentType,
-            isTrashed
+            isTrashedIfNullIsFalse()
         );
+    }
+
+    private boolean isTrashedIfNullIsFalse() {
+        if (isTrashed == null) {
+            return false;
+        }
+        return isTrashed;
     }
 }
