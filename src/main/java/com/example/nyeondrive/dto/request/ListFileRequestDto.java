@@ -26,6 +26,9 @@ public record ListFileRequestDto(
     }
 
     public List<FileOrderDto> toFileOrderDtos() {
+        if (orderBy() == null) {
+            return List.of();
+        }
         return orderBy().stream()
                 .map(this::toFilerOrderDto)
                 .toList();
