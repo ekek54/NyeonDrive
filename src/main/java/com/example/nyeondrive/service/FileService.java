@@ -63,7 +63,6 @@ public class FileService {
     }
 
     public List<File> listFile(FileFilterDto fileFilterDto, FilePagingDto filePagingDto, List<FileOrderDto> fileOrderDtos) {
-        return fileRepository.findAllWithFilterAndPaging(fileFilterDto, filePagingDto, fileOrderDtos);
+        return fileRepository.findAll(fileFilterDto, filePagingDto, fileOrderDtos);
     }
-
 }

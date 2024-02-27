@@ -7,6 +7,6 @@ import com.example.nyeondrive.entity.File;
 import java.util.List;
 
 public interface FileRepositoryCustom {
-    List<File> findAllWithFilterAndPaging(FileFilterDto fileFilterDto, FilePagingDto filePagingDto,
-                                          List<FileOrderDto> fileOrderDtos);
+    List<File> findAll(FileFilterDto fileFilterDto, FilePagingDto filePagingDto,
+                       List<FileOrderDto> fileOrderDtos);
 }

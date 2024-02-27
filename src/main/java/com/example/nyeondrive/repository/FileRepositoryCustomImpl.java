@@ -11,6 +11,7 @@ import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Path;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.PathBuilder;
+import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.List;
 import org.springframework.data.domain.PageRequest;
@@ -27,15 +28,12 @@ public class FileRepositoryCustomImpl implements FileRepositoryCustom {
     }
 
     @Override
-    public List<File> findAllWithFilterAndPaging(
+    public List<File> findAll(
             FileFilterDto fileFilterDto,
             FilePagingDto filePagingDto,
             List<FileOrderDto> fileOrderDtos
     ) {
-        Pageable pageable = PageRequest.of(filePagingDto.page(), filePagingDto.size());
-        OrderSpecifier[] orderSpecifiers = getOrderSpecifiers(fileOrderDtos);
-
-        return queryFactory
+        JPAQuery<File> query = queryFactory
                 .select(file)
                 .from(file)
                 .where(
@@ -44,9 +42,14 @@ public class FileRepositoryCustomImpl implements FileRepositoryCustom {
                         contentTypeEq(fileFilterDto.contentType()),
                         isTrashedEq(fileFilterDto.isTrashed())
                 )
+                .orderBy(getOrderSpecifiers(fileOrderDtos));
+        if (filePagingDto.isEmpty()) {
+            return query.fetch();
+        }
+        Pageable pageable = PageRequest.of(filePagingDto.page(), filePagingDto.size());
+        return query
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
-                .orderBy(getOrderSpecifiers(fileOrderDtos))
                 .fetch();
     }
 
