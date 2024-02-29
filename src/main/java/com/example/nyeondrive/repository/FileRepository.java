@@ -1,23 +1,10 @@
 package com.example.nyeondrive.repository;
 
 import com.example.nyeondrive.entity.File;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import java.util.Optional;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Repository;
-@Repository
-@RequiredArgsConstructor
-public class FileRepository {
-    @PersistenceContext
-    private EntityManager em;
+import lombok.NonNull;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-
-    public void saveFile(File file) {
-        em.persist(file);
-    }
-
-    public Optional<File> findFile(Long fileId) {
-        return Optional.ofNullable(em.find(File.class, fileId));
-    }
+public interface FileRepository extends JpaRepository<File, Long>, FileRepositoryCustom {
+    @NonNull Optional<File> findById(@NonNull Long fileId);
 }

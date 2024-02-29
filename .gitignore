@@ -39,3 +39,6 @@ out/
 ### VS Code ###
 .vscode/
 /qodana.yaml
+
+### QueryDSL ###
+/src/main/generated/
