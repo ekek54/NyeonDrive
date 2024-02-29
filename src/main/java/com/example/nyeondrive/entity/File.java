@@ -2,6 +2,7 @@ package com.example.nyeondrive.entity;
 
 import com.example.nyeondrive.vo.FileName;
 import com.example.nyeondrive.constant.FileType;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
@@ -44,7 +45,7 @@ public class File {
     @ManyToOne
     private File parent;
 
-    @OneToMany(mappedBy = "parent")
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
     private List<File> children;
 
     @Transient

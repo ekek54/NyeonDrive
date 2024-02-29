@@ -65,4 +65,9 @@ public class FileService {
     public List<File> listFile(FileFilterDto fileFilterDto, FilePagingDto filePagingDto, List<FileOrderDto> fileOrderDtos) {
         return fileRepository.findAll(fileFilterDto, filePagingDto, fileOrderDtos);
     }
+
+    public void deleteFile(Long fileId) {
+        File file = findFile(fileId);
+        fileRepository.delete(file);
+    }
 }

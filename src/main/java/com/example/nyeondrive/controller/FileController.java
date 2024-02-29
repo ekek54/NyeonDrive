@@ -13,10 +13,10 @@ import com.example.nyeondrive.entity.File;
 import com.example.nyeondrive.service.FileService;
 import com.example.nyeondrive.service.StorageService;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.Valid;
 import java.io.IOException;
 import java.util.List;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -97,5 +97,11 @@ public class FileController {
         return fileService.listFile(fileFilterDto, filePagingDto, fileOrderDtos).stream()
                 .map(GetFileResponseDto::of)
                 .toList();
+    }
+
+    @DeleteMapping(path = "/{fileId}")
+    public String deleteFile(@PathVariable("fileId") Long fileId) {
+        fileService.deleteFile(fileId);
+        return "deleteFile";
     }
 }
