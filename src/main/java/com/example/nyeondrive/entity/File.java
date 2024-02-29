@@ -87,7 +87,4 @@ public class File {
         return FileType.of(contentType) == FileType.FILE;
     }
 
-    public boolean isDirectory() {
-        return FileType.of(contentType) == FileType.DIRECTORY;
-    }
 }
