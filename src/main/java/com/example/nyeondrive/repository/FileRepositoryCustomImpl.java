@@ -2,15 +2,14 @@ package com.example.nyeondrive.repository;
 
 import static com.example.nyeondrive.entity.QFile.file;
 
+import com.example.nyeondrive.constant.FileOrderField;
 import com.example.nyeondrive.dto.service.FileFilterDto;
 import com.example.nyeondrive.dto.service.FileOrderDto;
 import com.example.nyeondrive.dto.service.FilePagingDto;
 import com.example.nyeondrive.entity.File;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
-import com.querydsl.core.types.Path;
 import com.querydsl.core.types.dsl.BooleanExpression;
-import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.List;
@@ -69,16 +68,30 @@ public class FileRepositoryCustomImpl implements FileRepositoryCustom {
         return name != null ? file.fileName.name.eq(name) : null;
     }
 
-    private OrderSpecifier[] getOrderSpecifiers(List<FileOrderDto> fileOrderDtos) {
+    private OrderSpecifier<?>[] getOrderSpecifiers(List<FileOrderDto> fileOrderDtos) {
         return fileOrderDtos.stream()
                 .map(this::getOrderSpecifier)
                 .toArray(OrderSpecifier[]::new);
     }
 
-    private OrderSpecifier getOrderSpecifier(FileOrderDto fileOrderDto) {
-        PathBuilder<File> pathBuilder = new PathBuilder<>(File.class, "file");
-        Path<Object> path = pathBuilder.get(fileOrderDto.field());
+    private OrderSpecifier<?> getOrderSpecifier(FileOrderDto fileOrderDto) {
         Direction direction = Direction.fromString(fileOrderDto.direction());
-        return new OrderSpecifier(direction.isAscending() ? Order.ASC : Order.DESC, path);
+        Order order = direction.isAscending() ? Order.ASC : Order.DESC;
+        if (fileOrderDto.field().equals(FileOrderField.NAME)) {
+            return new OrderSpecifier<>(order, file.fileName.name);
+        }
+        if (fileOrderDto.field().equals(FileOrderField.SIZE)) {
+            return new OrderSpecifier<>(order, file.size);
+        }
+        if (fileOrderDto.field().equals(FileOrderField.CONTENT_TYPE)) {
+            return new OrderSpecifier<>(order, file.contentType);
+        }
+        if (fileOrderDto.field().equals(FileOrderField.TRASHED)) {
+            return new OrderSpecifier<>(order, file.isTrashed);
+        }
+        if (fileOrderDto.field().equals(FileOrderField.ID)) {
+            return new OrderSpecifier<>(order, file.id);
+        }
+        throw new RuntimeException("Invalid order field");
     }
 }
