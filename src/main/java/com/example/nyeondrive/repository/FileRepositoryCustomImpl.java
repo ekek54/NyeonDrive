@@ -7,12 +7,13 @@ import com.example.nyeondrive.dto.service.FileFilterDto;
 import com.example.nyeondrive.dto.service.FileOrderDto;
 import com.example.nyeondrive.dto.service.FilePagingDto;
 import com.example.nyeondrive.entity.File;
-import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.ComparableExpressionBase;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.List;
+import java.util.Map;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort.Direction;
@@ -20,7 +21,16 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public class FileRepositoryCustomImpl implements FileRepositoryCustom {
-    JPAQueryFactory queryFactory;
+    private final JPAQueryFactory queryFactory;
+    private static final Map<FileOrderField, ComparableExpressionBase<?>> orderFieldMap = Map.of(
+            FileOrderField.ID, file.id,
+            FileOrderField.NAME, file.fileName.name,
+            FileOrderField.EXTENSION, file.fileName.extension,
+            FileOrderField.CONTENT_TYPE, file.contentType,
+            FileOrderField.SIZE, file.size,
+            FileOrderField.CREATED_AT, file.createdAt,
+            FileOrderField.TRASHED, file.isTrashed
+    );
 
     public FileRepositoryCustomImpl(JPAQueryFactory queryFactory) {
         this.queryFactory = queryFactory;
@@ -76,22 +86,11 @@ public class FileRepositoryCustomImpl implements FileRepositoryCustom {
 
     private OrderSpecifier<?> getOrderSpecifier(FileOrderDto fileOrderDto) {
         Direction direction = Direction.fromString(fileOrderDto.direction());
-        Order order = direction.isAscending() ? Order.ASC : Order.DESC;
-        if (fileOrderDto.field().equals(FileOrderField.NAME)) {
-            return new OrderSpecifier<>(order, file.fileName.name);
+        FileOrderField fileOrderField = FileOrderField.of(fileOrderDto.field());
+        ComparableExpressionBase<?> comparableExpressionBase = orderFieldMap.get(fileOrderField);
+        if (direction.isAscending()) {
+            return comparableExpressionBase.asc();
         }
-        if (fileOrderDto.field().equals(FileOrderField.SIZE)) {
-            return new OrderSpecifier<>(order, file.size);
-        }
-        if (fileOrderDto.field().equals(FileOrderField.CONTENT_TYPE)) {
-            return new OrderSpecifier<>(order, file.contentType);
-        }
-        if (fileOrderDto.field().equals(FileOrderField.TRASHED)) {
-            return new OrderSpecifier<>(order, file.isTrashed);
-        }
-        if (fileOrderDto.field().equals(FileOrderField.ID)) {
-            return new OrderSpecifier<>(order, file.id);
-        }
-        throw new RuntimeException("Invalid order field");
+        return comparableExpressionBase.desc();
     }
 }

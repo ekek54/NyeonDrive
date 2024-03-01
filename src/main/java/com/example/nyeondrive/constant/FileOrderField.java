@@ -1,11 +1,39 @@
 package com.example.nyeondrive.constant;
 
-public class FileOrderField {
-    public static final String NAME = "name";
-    public static final String SIZE = "size";
-    public static final String CONTENT_TYPE = "contentType";
-    public static final String CREATED_AT = "createdAt";
-    public static final String UPDATED_AT = "updatedAt";
-    public static final String TRASHED = "trashed";
-    public static final String ID = "id";
+import java.util.Arrays;
+import java.util.Map;
+import java.util.stream.Collectors;
+import lombok.Getter;
+
+@Getter
+public enum FileOrderField {
+    ID("id"),
+    NAME("name"),
+    EXTENSION("extension"),
+    CONTENT_TYPE("contentType"),
+    SIZE("size"),
+    TRASHED("isTrashed"),
+    CREATED_AT("createdAt");
+
+    private final String fieldName;
+    private static final Map<String, FileOrderField> fieldMap = Arrays.stream(values())
+            .collect(Collectors.toMap(
+                    FileOrderField::getFieldName,
+                    fileOrderField -> fileOrderField
+            ));
+
+    FileOrderField(String fieldName) {
+        this.fieldName = fieldName;
+    }
+
+    public static FileOrderField of(String fieldName) {
+        validateFieldName(fieldName);
+        return fieldMap.get(fieldName);
+    }
+
+    private static void validateFieldName(String fieldName) {
+        if (!fieldMap.containsKey(fieldName)) {
+            throw new IllegalArgumentException("Invalid field name: " + fieldName);
+        }
+    }
 }

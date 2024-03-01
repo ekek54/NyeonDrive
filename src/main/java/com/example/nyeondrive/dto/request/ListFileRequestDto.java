@@ -20,7 +20,6 @@ public record ListFileRequestDto(
         @Pattern(regexp = ORDER_BY_PATTERN)
         List<String> orderBy
 ) {
-    public static Set<String> allowedOrderBy = Set.of("id", "name", "extension", "size", "isTrashed");
     private static final String ORDER_BY_PATTERN = "^[a-zA-Z]*( (asc|desc))?$";
 
     public FilePagingDto toFilePagingDto() {
@@ -42,9 +41,6 @@ public record ListFileRequestDto(
 
     private FileOrderDto toFilerOrderDto(String orderBy) {
         String[] split = orderBy.split(" ");
-        if (!allowedOrderBy.contains(split[0])) {
-            throw new IllegalArgumentException("Invalid orderBy");
-        }
         if (split.length == 1) {
             return new FileOrderDto(split[0], "asc");
         }
