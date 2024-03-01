@@ -29,6 +29,9 @@ public class FileName {
 
     @Override
     public String toString() {
+        if (extension.isEmpty()) {
+            return this.name;
+        }
         return this.name + "." + this.extension;
     }
 }
