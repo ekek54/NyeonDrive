@@ -4,7 +4,7 @@ import com.example.nyeondrive.entity.File;
 import java.time.LocalDateTime;
 
 
-public record GetFileResponseDto(
+public record FileResponseDto(
         Long id,
         String name,
         Long parentId,
@@ -12,8 +12,8 @@ public record GetFileResponseDto(
         Boolean isTrashed,
         LocalDateTime createdAt
 ) {
-    public static GetFileResponseDto of(File file) {
-        return new GetFileResponseDto(file.getId(), file.getFileName().toString(), file.getParent().getId(),
+    public static FileResponseDto of(File file) {
+        return new FileResponseDto(file.getId(), file.getFileName().toString(), file.getParent().getId(),
                 file.getContentType(), file.isTrashed(), file.getCreatedAt());
     }
 }

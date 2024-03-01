@@ -33,6 +33,7 @@ public class FileService {
                 .isTrashed(createFileDto.isTrashed())
                 .build();
         fileRepository.save(file);
+
     }
 
     public File findFile(Long fileId) {
