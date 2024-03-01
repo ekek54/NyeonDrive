@@ -6,7 +6,6 @@ import com.example.nyeondrive.dto.service.FilePagingDto;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Pattern;
 import java.util.List;
-import java.util.Set;
 
 public record ListFileRequestDto(
         String name,
