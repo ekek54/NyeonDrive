@@ -24,7 +24,7 @@ public class FileService {
         fileRepository.save(file);
     }
 
-    public void createFile(CreateFileDto createFileDto) {
+    public File createFile(CreateFileDto createFileDto) {
         File parent = findFile(createFileDto.parentId());
         File file = File.builder()
                 .fileName(createFileDto.name())
@@ -33,7 +33,7 @@ public class FileService {
                 .isTrashed(createFileDto.isTrashed())
                 .build();
         fileRepository.save(file);
-
+        return file;
     }
 
     public File findFile(Long fileId) {
@@ -45,7 +45,7 @@ public class FileService {
         fileRepository.save(root);
     }
 
-    public void updateFile(Long fileId, UpdateFileDto updateFileDto) {
+    public File updateFile(Long fileId, UpdateFileDto updateFileDto) {
         File file = findFile(fileId);
         if (updateFileDto.name() != null) {
             file.setFileName(updateFileDto.name());
@@ -61,6 +61,7 @@ public class FileService {
             file.setTrashed(updateFileDto.isTrashed());
         }
         fileRepository.save(file);
+        return file;
     }
 
     public List<File> listFile(FileFilterDto fileFilterDto, FilePagingDto filePagingDto, List<FileOrderDto> fileOrderDtos) {
