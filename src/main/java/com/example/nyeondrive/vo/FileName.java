@@ -34,4 +34,15 @@ public class FileName {
         }
         return this.name + "." + this.extension;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (!(obj instanceof FileName fileName)) {
+            return false;
+        }
+        return this.name.equals(fileName.name) && this.extension.equals(fileName.extension);
+    }
 }
