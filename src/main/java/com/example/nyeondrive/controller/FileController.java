@@ -3,7 +3,7 @@ package com.example.nyeondrive.controller;
 import com.example.nyeondrive.dto.request.CreateFileRequestDto;
 import com.example.nyeondrive.dto.request.ListFileRequestDto;
 import com.example.nyeondrive.dto.request.UpdateFileRequestDto;
-import com.example.nyeondrive.dto.response.GetFileResponseDto;
+import com.example.nyeondrive.dto.response.FileResponseDto;
 import com.example.nyeondrive.dto.service.CreateFileDto;
 import com.example.nyeondrive.dto.service.FileFilterDto;
 import com.example.nyeondrive.dto.service.FileOrderDto;
@@ -15,6 +15,7 @@ import com.example.nyeondrive.service.StorageService;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.List;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -41,20 +42,23 @@ public class FileController {
 
 
     @PostMapping
-    public String createFile(@Validated @RequestBody CreateFileRequestDto createFileRequestDto) {
+    public ResponseEntity<FileResponseDto> createFile(
+            @Validated @RequestBody CreateFileRequestDto createFileRequestDto) {
         CreateFileDto createFileDto = createFileRequestDto.toCreateFileDto();
-        fileService.createFile(createFileDto);
-        return "createFile";
+        File file = fileService.createFile(createFileDto);
+        return ResponseEntity.ok()
+                .body(FileResponseDto.of(file));
     }
 
     @PatchMapping(path = "/{fileId}")
-    public String updateFile(
+    public ResponseEntity<FileResponseDto> updateFile(
             @PathVariable("fileId") Long fileId,
             @RequestBody UpdateFileRequestDto updateFileRequestDto
     ) {
         UpdateFileDto updateFileDto = updateFileRequestDto.toUpdateFileDto();
-        fileService.updateFile(fileId, updateFileDto);
-        return "updateFile";
+        File file = fileService.updateFile(fileId, updateFileDto);
+        return ResponseEntity.ok()
+                .body(FileResponseDto.of(file));
     }
 
     @PostMapping(value = "/upload", params = "mode=stream")
@@ -85,23 +89,28 @@ public class FileController {
     }
 
     @GetMapping(path = "/{fileId}")
-    public GetFileResponseDto getFile(@PathVariable("fileId") Long fileId) {
-        return GetFileResponseDto.of(fileService.findFile(fileId));
+    public ResponseEntity<FileResponseDto> getFile(@PathVariable("fileId") Long fileId) {
+        File file = fileService.findFile(fileId);
+        return ResponseEntity.ok()
+                .body(FileResponseDto.of(file));
     }
 
     @GetMapping
-    public List<GetFileResponseDto> listFile(@ModelAttribute ListFileRequestDto ListFileRequestDto) {
+    public ResponseEntity<List<FileResponseDto>> listFile(@ModelAttribute ListFileRequestDto ListFileRequestDto) {
         FileFilterDto fileFilterDto = ListFileRequestDto.toFileFilterDto();
         FilePagingDto filePagingDto = ListFileRequestDto.toFilePagingDto();
         List<FileOrderDto> fileOrderDtos = ListFileRequestDto.toFileOrderDtos();
-        return fileService.listFile(fileFilterDto, filePagingDto, fileOrderDtos).stream()
-                .map(GetFileResponseDto::of)
+        List<FileResponseDto> files = fileService.listFile(fileFilterDto, filePagingDto, fileOrderDtos).stream()
+                .map(FileResponseDto::of)
                 .toList();
+        return ResponseEntity.ok()
+                .body(files);
     }
 
     @DeleteMapping(path = "/{fileId}")
-    public String deleteFile(@PathVariable("fileId") Long fileId) {
+    public ResponseEntity<Void> deleteFile(@PathVariable("fileId") Long fileId) {
         fileService.deleteFile(fileId);
-        return "deleteFile";
+        return ResponseEntity.noContent()
+                .build();
     }
 }
