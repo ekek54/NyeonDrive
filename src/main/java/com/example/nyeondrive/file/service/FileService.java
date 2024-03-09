@@ -40,9 +40,9 @@ public class FileService {
         return fileRepository.findById(fileId).orElseThrow(() -> new RuntimeException("File not found"));
     }
 
-    public void createRootFolder() {
+    public File createRootFolder() {
         File root = File.createRootFolder();
-        fileRepository.save(root);
+        return fileRepository.save(root);
     }
 
     public File updateFile(Long fileId, UpdateFileDto updateFileDto) {

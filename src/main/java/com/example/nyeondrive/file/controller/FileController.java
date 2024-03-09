@@ -82,12 +82,6 @@ public class FileController {
         return "streamUpload";
     }
 
-    @PostMapping(value = "/createRootFolder")
-    public String createRootFolder() {
-        fileService.createRootFolder();
-        return "createRootFolder";
-    }
-
     @GetMapping(path = "/{fileId}")
     public ResponseEntity<FileResponseDto> getFile(@PathVariable("fileId") Long fileId) {
         File file = fileService.findFile(fileId);
