@@ -18,3 +18,4 @@
   - MySQL 8.0.36
   - awssdk-S3
   - ncp Object Storage
+- [문서함](https://www.notion.so/8cf6d60093984a028751a4c1dcda92fe?pvs=4)
