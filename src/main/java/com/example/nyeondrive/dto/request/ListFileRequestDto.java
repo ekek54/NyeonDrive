@@ -34,11 +34,11 @@ public record ListFileRequestDto(
             return List.of();
         }
         return orderBy().stream()
-                .map(this::toFilerOrderDto)
+                .map(this::toFileOrderDto)
                 .toList();
     }
 
-    private FileOrderDto toFilerOrderDto(String orderBy) {
+    private FileOrderDto toFileOrderDto(String orderBy) {
         String[] split = orderBy.split(" ");
         if (split.length == 1) {
             return new FileOrderDto(split[0], "asc");

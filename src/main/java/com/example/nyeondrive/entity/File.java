@@ -7,6 +7,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
@@ -51,7 +52,7 @@ public class File {
     private LocalDateTime createdAt;
 
     @JoinColumn(name = "parent_id")
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private File parent;
 
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
