@@ -13,7 +13,7 @@ public record FileResponseDto(
         LocalDateTime createdAt
 ) {
     public static FileResponseDto of(File file) {
-        return new FileResponseDto(file.getId(), file.getFileName().toString(), file.getParent().getId(),
+        return new FileResponseDto(file.getId(), file.getFileName().toString(), file.getParentId().orElse(null),
                 file.getContentType(), file.isTrashed(), file.getCreatedAt());
     }
 }

@@ -1,5 +1,6 @@
 package com.example.nyeondrive.entity;
 
+import com.example.nyeondrive.exception.error.BadRequestException;
 import com.example.nyeondrive.vo.FileName;
 import com.example.nyeondrive.constant.FileType;
 import jakarta.persistence.CascadeType;
@@ -17,6 +18,7 @@ import jakarta.persistence.Transient;
 import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -68,7 +70,7 @@ public class File {
         this.contentType = contentType;
         this.size = size;
         if (parent.isFile()) {
-            throw new RuntimeException("Parent is not a directory");
+            throw new BadRequestException("Parent is not a directory");
         }
         this.parent = parent;
         this.inputStream = inputStream;
@@ -88,9 +90,16 @@ public class File {
 
     public void setParent(File parent) {
         if (parent.isFile()) {
-            throw new RuntimeException("Parent is not a directory");
+            throw new BadRequestException("Parent is not a directory");
         }
         this.parent = parent;
+    }
+
+    public Optional<Long> getParentId() {
+        if (parent == null) {
+            return Optional.empty();
+        }
+        return Optional.of(parent.getId());
     }
 
     public boolean isFile() {

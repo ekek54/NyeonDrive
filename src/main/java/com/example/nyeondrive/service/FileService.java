@@ -6,6 +6,7 @@ import com.example.nyeondrive.dto.service.FileOrderDto;
 import com.example.nyeondrive.dto.service.FilePagingDto;
 import com.example.nyeondrive.dto.service.UpdateFileDto;
 import com.example.nyeondrive.entity.File;
+import com.example.nyeondrive.exception.error.NotFoundException;
 import com.example.nyeondrive.repository.FileRepository;
 import jakarta.transaction.Transactional;
 import java.util.List;
@@ -37,7 +38,7 @@ public class FileService {
     }
 
     public File findFile(Long fileId) {
-        return fileRepository.findById(fileId).orElseThrow(() -> new RuntimeException("File not found"));
+        return fileRepository.findById(fileId).orElseThrow(() -> new NotFoundException("File not found."));
     }
 
     public void createRootFolder() {
