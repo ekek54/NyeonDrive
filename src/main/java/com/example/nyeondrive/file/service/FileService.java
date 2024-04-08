@@ -1,5 +1,6 @@
 package com.example.nyeondrive.file.service;
 
+import com.example.nyeondrive.exception.error.NotFoundException;
 import com.example.nyeondrive.file.dto.service.CreateFileDto;
 import com.example.nyeondrive.file.dto.service.FileFilterDto;
 import com.example.nyeondrive.file.dto.service.FileOrderDto;
@@ -37,7 +38,7 @@ public class FileService {
     }
 
     public File findFile(Long fileId) {
-        return fileRepository.findById(fileId).orElseThrow(() -> new RuntimeException("File not found"));
+        return fileRepository.findById(fileId).orElseThrow(() -> new NotFoundException("File not found"));
     }
 
     public File createRootFolder() {
