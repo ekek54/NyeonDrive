@@ -1,5 +1,6 @@
 package com.example.nyeondrive.constant;
 
+import com.example.nyeondrive.exception.error.BadRequestException;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -36,7 +37,7 @@ public enum FileOrderField {
 
     private static void validateFieldName(String fieldName) {
         if (!fieldMap.containsKey(fieldName)) {
-            throw new IllegalArgumentException("Invalid field name: " + fieldName);
+            throw new BadRequestException("Invalid field name: " + fieldName);
         }
     }
 }
