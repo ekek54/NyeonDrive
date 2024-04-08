@@ -4,8 +4,10 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 @Getter
+@Slf4j
 public enum FileOrderField {
     ID("id"),
     NAME("name"),
@@ -27,6 +29,7 @@ public enum FileOrderField {
     }
 
     public static FileOrderField of(String fieldName) {
+        log.info("orderBy field name: {}", fieldName);
         validateFieldName(fieldName);
         return fieldMap.get(fieldName);
     }

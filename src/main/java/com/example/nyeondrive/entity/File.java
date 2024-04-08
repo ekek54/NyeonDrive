@@ -17,6 +17,7 @@ import jakarta.persistence.Transient;
 import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -91,6 +92,13 @@ public class File {
             throw new RuntimeException("Parent is not a directory");
         }
         this.parent = parent;
+    }
+
+    public Optional<Long> getParentId() {
+        if (parent == null) {
+            return Optional.empty();
+        }
+        return Optional.of(parent.getId());
     }
 
     public boolean isFile() {
