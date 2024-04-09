@@ -24,16 +24,23 @@ public class UserService {
         if (isDuplicateName(createUserDto.name())) {
             throw new BadRequestException("Name is already taken");
         }
+        if (isDuplicateEmail(createUserDto.email())) {
+            throw new BadRequestException("Email is already taken");
+        }
+        File rootFolder = fileService.createRootFolder();
         User user = User.builder()
                 .name(createUserDto.name())
                 .email(createUserDto.email())
+                .drive(rootFolder)
                 .build();
-        File rootFolder = fileService.createRootFolder();
-        user.setDrive(rootFolder);
         return userRepository.save(user);
     }
 
     private boolean isDuplicateName(String name) {
-        return userRepository.findByName(name).isPresent();
+        return userRepository.existsByName(name);
+    }
+
+    private boolean isDuplicateEmail(String email) {
+        return userRepository.existsByEmail(email);
     }
 }

@@ -40,7 +40,6 @@ public class FileController {
         this.storageService = storageService;
     }
 
-
     @PostMapping
     public ResponseEntity<FileResponseDto> createFile(
             @Validated @RequestBody CreateFileRequestDto createFileRequestDto) {
