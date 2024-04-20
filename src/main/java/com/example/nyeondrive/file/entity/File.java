@@ -1,8 +1,8 @@
 package com.example.nyeondrive.file.entity;
 
 import com.example.nyeondrive.exception.error.BadRequestException;
-import com.example.nyeondrive.file.vo.FileName;
 import com.example.nyeondrive.file.constant.FileType;
+import com.example.nyeondrive.file.vo.FileName;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
@@ -70,9 +70,7 @@ public class File {
         this.fileName = new FileName(fileName);
         this.contentType = contentType;
         this.size = size;
-        if (parent.isFile()) {
-            throw new BadRequestException("Parent is not a directory");
-        }
+        validateParent(parent);
         this.parent = parent;
         this.inputStream = inputStream;
         this.isTrashed = isTrashed;
@@ -90,9 +88,7 @@ public class File {
     }
 
     public void setParent(File parent) {
-        if (parent.isFile()) {
-            throw new BadRequestException("Parent is not a directory");
-        }
+        validateParent(parent);
         this.parent = parent;
     }
 
@@ -105,5 +101,17 @@ public class File {
             return Optional.empty();
         }
         return Optional.of(parent.getId());
+    }
+
+    private void validateParent(File parent) {
+        if (parent.isFile()) {
+            throw new BadRequestException("Parent is not a directory");
+        }
+        if (parent.isTrashed()) {
+            throw new BadRequestException("Parent is trashed");
+        }
+        if (parent.getParent() == this) {
+            throw new BadRequestException("Parent is circular relationship");
+        }
     }
 }
