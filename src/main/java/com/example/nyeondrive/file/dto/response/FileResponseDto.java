@@ -1,6 +1,6 @@
 package com.example.nyeondrive.file.dto.response;
 
-import com.example.nyeondrive.file.entity.File;
+import com.example.nyeondrive.file.dto.service.FileDto;
 import java.time.LocalDateTime;
 
 
@@ -12,8 +12,7 @@ public record FileResponseDto(
         Boolean isTrashed,
         LocalDateTime createdAt
 ) {
-    public static FileResponseDto of(File file) {
-        return new FileResponseDto(file.getId(), file.getFileName().toString(), file.getParentId().orElse(null),
-                file.getContentType(), file.isTrashed(), file.getCreatedAt());
+    public static FileResponseDto of(FileDto fileDto) {
+        return new FileResponseDto(fileDto.id(), fileDto.name(), fileDto.parentId(), fileDto.contentType(), fileDto.isTrashed(), fileDto.createdAt());
     }
 }

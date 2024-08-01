@@ -13,4 +13,6 @@ public interface FileRepository extends JpaRepository<File, Long> {
     Optional<File> findWithAncestorClosuresById(Long fileId);
 
     Optional<File> findWithDescendantClosuresById(Long fileId);
+
+    Optional<File> findWithAncestorClosuresAndDescendantClosuresById(Long fileId);
 }
