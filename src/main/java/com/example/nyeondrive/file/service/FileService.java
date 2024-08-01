@@ -2,6 +2,7 @@ package com.example.nyeondrive.file.service;
 
 import com.example.nyeondrive.exception.error.BadRequestException;
 import com.example.nyeondrive.exception.error.NotFoundException;
+import com.example.nyeondrive.file.constant.FileType;
 import com.example.nyeondrive.file.dto.service.CreateFileDto;
 import com.example.nyeondrive.file.dto.service.FileDto;
 import com.example.nyeondrive.file.dto.service.FileFilterDto;
@@ -33,8 +34,9 @@ public class FileService {
     }
 
     public FileDto createFile(CreateFileDto createFileDto) {
-        // 조상이 될 파일 목록을 얻기 위해 부모 파일을 자식으로 하는 클로저 탐색.
-        List<FileClosure> ancestorClosures = fileClosureRepository.findAllByDescendant_Id(createFileDto.parentId());
+        // 조상이 될 파일 목록을 얻기 위해 부모 파일의 조상과 연결된 클로저 탐색.
+        File parentReference = fileRepository.getReferenceById(createFileDto.parentId());
+        List<FileClosure> ancestorClosures = fileClosureRepository.findAllByDescendant(parentReference);
         if (ancestorClosures.isEmpty()) {
             throw new BadRequestException("Parent not found");
         }
@@ -48,13 +50,14 @@ public class FileService {
         fileRepository.save(file);
 
         // 조상 파일 - 새 파일 클로저 생성
+        List<FileClosure> newClosures = new ArrayList<>();
         for (FileClosure ancestorClosure : ancestorClosures) {
             FileClosure newClosure = FileClosure.builder()
                     .ancestor(ancestorClosure.getAncestor())
                     .descendant(file)
                     .depth(ancestorClosure.getDepth() + 1)
                     .build();
-            fileClosureRepository.save(newClosure);
+            newClosures.add(newClosure);
         }
 
         // 새 파일 - 새 파일 클로저 생성
@@ -63,7 +66,8 @@ public class FileService {
                 .descendant(file)
                 .depth(0L)
                 .build();
-        fileClosureRepository.save(selfClosure);
+        newClosures.add(selfClosure);
+        fileClosureRepository.saveAll(newClosures);
         return FileDto.of(createFileDto.parentId(), file);
     }
 
