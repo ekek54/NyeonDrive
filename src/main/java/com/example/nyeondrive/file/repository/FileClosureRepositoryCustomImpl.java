@@ -1,12 +1,13 @@
 package com.example.nyeondrive.file.repository;
 
 import static com.example.nyeondrive.file.entity.QFile.file;
+import static com.example.nyeondrive.file.entity.QFileClosure.fileClosure;
 
 import com.example.nyeondrive.file.constant.FileOrderField;
 import com.example.nyeondrive.file.dto.service.FileFilterDto;
 import com.example.nyeondrive.file.dto.service.FileOrderDto;
 import com.example.nyeondrive.file.dto.service.FilePagingDto;
-import com.example.nyeondrive.file.entity.File;
+import com.example.nyeondrive.file.entity.FileClosure;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.ComparableExpressionBase;
@@ -14,13 +15,15 @@ import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.List;
 import java.util.Map;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public class FileRepositoryCustomImpl implements FileRepositoryCustom {
+@RequiredArgsConstructor
+public class FileClosureRepositoryCustomImpl implements FileClosureRepositoryCustom {
     private final JPAQueryFactory queryFactory;
     private static final Map<FileOrderField, ComparableExpressionBase<?>> orderFieldMap = Map.of(
             FileOrderField.ID, file.id,
@@ -32,24 +35,24 @@ public class FileRepositoryCustomImpl implements FileRepositoryCustom {
             FileOrderField.TRASHED, file.isTrashed
     );
 
-    public FileRepositoryCustomImpl(JPAQueryFactory queryFactory) {
-        this.queryFactory = queryFactory;
-    }
-
     @Override
-    public List<File> findAll(
+    public List<FileClosure> findAll(
             FileFilterDto fileFilterDto,
             FilePagingDto filePagingDto,
             List<FileOrderDto> fileOrderDtos
     ) {
-        JPAQuery<File> query = queryFactory
-                .select(file)
-                .from(file)
+        System.out.println(fileFilterDto.parentId());
+        JPAQuery<FileClosure> query = queryFactory
+                .select(fileClosure)
+                .from(fileClosure)
+                .join(fileClosure.descendant)
+                .fetchJoin()
                 .where(
                         nameEq(fileFilterDto.name()),
-                        parentIdEq(fileFilterDto.parentId()),
                         contentTypeEq(fileFilterDto.contentType()),
-                        isTrashedEq(fileFilterDto.isTrashed())
+                        isTrashedEq(fileFilterDto.isTrashed()),
+                        fileClosure.depth.eq(1L),
+                        parentIdEq(fileFilterDto.parentId())
                 )
                 .orderBy(getOrderSpecifiers(fileOrderDtos));
         if (filePagingDto.isEmpty()) {
@@ -62,16 +65,16 @@ public class FileRepositoryCustomImpl implements FileRepositoryCustom {
                 .fetch();
     }
 
+    private BooleanExpression parentIdEq(Long parentId) {
+        return parentId != null ? fileClosure.ancestor.id.eq(parentId) : null;
+    }
+
     private BooleanExpression isTrashedEq(Boolean isTrashed) {
         return isTrashed != null ? file.isTrashed.eq(isTrashed) : null;
     }
 
     private BooleanExpression contentTypeEq(String contentType) {
         return contentType != null ? file.contentType.eq(contentType) : null;
-    }
-
-    private BooleanExpression parentIdEq(Long parentId) {
-        return parentId != null ? file.parent.id.eq(parentId) : null;
     }
 
     private BooleanExpression nameEq(String name) {

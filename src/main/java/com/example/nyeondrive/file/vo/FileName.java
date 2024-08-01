@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 public class FileName {
     @Column(name = "file_name")
     private String name;
+
     @Column(name = "file_extension")
     private String extension;
 
