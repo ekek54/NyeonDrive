@@ -44,4 +44,8 @@ public class FileClosure {
     public boolean isImmediate() {
         return this.depth == 1;
     }
+
+    public boolean isNotSelf() {
+        return this.depth != 0;
+    }
 }
