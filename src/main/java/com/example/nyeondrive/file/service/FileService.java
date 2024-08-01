@@ -72,16 +72,26 @@ public class FileService {
     }
 
     public FileDto findFile(Long fileId) {
+        //TODO: 조상이 삭제 처리 되어 있다면 에러 처리
         File file = fileRepository.findById(fileId).
                 orElseThrow(() -> new NotFoundException("File not found"));
-        return FileDto.of(findParent(file).getId(), file);
+        Optional<FileClosure> parentClosure = fileClosureRepository
+                .findWithAncestorByDescendantAndDepth(file, 1L);
+        Long parentId = findParent(file) == null ? null : findParent(file).getId();
+        return FileDto.of(parentId, file);
+
     }
 
     private File findParent(File file) {
+        if (file.getParent() != null) {
+            return file.getParent();
+        }
         Optional<FileClosure> parentClosure = fileClosureRepository.findWithAncestorByDescendantAndDepth(file, 1L);
-        return parentClosure
+        File parentReference = parentClosure
                 .map(FileClosure::getAncestor)
                 .orElse(null);
+        file.setParent(parentReference);
+        return file.getParent();
     }
 
     public FileDto createDrive(UUID userId) {
