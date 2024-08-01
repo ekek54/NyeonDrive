@@ -95,7 +95,7 @@ public class FileService {
     }
 
     public FileDto createDrive(UUID userId) {
-        fileRepository.findByOwnerIdAndContentType(userId, "drive")
+        fileRepository.findByOwnerIdAndContentType(userId, FileType.DRIVE_CONTENT_TYPE)
                 .ifPresent(file -> {
                     throw new BadRequestException("Drive already exists");
                 });
