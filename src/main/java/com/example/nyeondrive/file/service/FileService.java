@@ -72,7 +72,10 @@ public class FileService {
     }
 
     public FileDto findFile(Long fileId) {
-        //TODO: 조상이 삭제 처리 되어 있다면 에러 처리
+        File fileReference = fileRepository.getReferenceById(fileId);
+        if (isAncestorTrashed(fileReference)) {
+            throw new BadRequestException("Parent file is trashed");
+        }
         File file = fileRepository.findById(fileId).
                 orElseThrow(() -> new NotFoundException("File not found"));
         Optional<FileClosure> parentClosure = fileClosureRepository
@@ -80,6 +83,12 @@ public class FileService {
         Long parentId = findParent(file) == null ? null : findParent(file).getId();
         return FileDto.of(parentId, file);
 
+    }
+
+    private boolean isAncestorTrashed(File file) {
+        List<FileClosure> trashedAncestorClosures = fileClosureRepository.findAllByDescendantAndAncestor_Trashed(
+                file, true);
+        return !trashedAncestorClosures.isEmpty();
     }
 
     private File findParent(File file) {

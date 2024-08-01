@@ -20,6 +20,8 @@ public interface FileClosureRepository extends JpaRepository<FileClosure, Long>,
 
     List<FileClosure> findAllByAncestor(File file);
 
+    List<FileClosure> findAllByDescendantAndAncestor_Trashed(File descendant, boolean ancestor_trashed);
+
     @Modifying
     @Query("DELETE FROM FileClosure fc WHERE fc.ancestor IN :ancestors AND fc.descendant IN :descendants")
     void deleteAllInBatchByAncestorInAndDescendantIn(List<File> ancestors, List<File> descendants);
