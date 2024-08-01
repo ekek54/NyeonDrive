@@ -1,29 +1,26 @@
 package com.example.nyeondrive.file.entity;
 
-import com.example.nyeondrive.exception.error.BadRequestException;
 import com.example.nyeondrive.file.constant.FileType;
 import com.example.nyeondrive.file.vo.FileName;
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Transient;
 import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
+import java.util.Objects;
+import java.util.UUID;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.proxy.HibernateProxy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -50,68 +47,79 @@ public class File {
     @Column(name = "is_trashed")
     private boolean isTrashed = false;
 
+    @Column(name = "owner_id")
+    private UUID ownerId;
+
     @CreatedDate
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    @JoinColumn(name = "parent_id")
-    @ManyToOne(fetch = FetchType.LAZY)
-    private File parent;
+    @OneToMany(mappedBy = "descendant")
+    private List<FileClosure> ancestorClosures;
 
-    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
-    private List<File> children;
+    @OneToMany(mappedBy = "ancestor")
+    private List<FileClosure> descendantClosures;
 
     @Transient
     private InputStream inputStream;
 
+
     @Builder
-    public File(String fileName, String contentType, Long size, File parent, InputStream inputStream,
+    public File(String fileName, String contentType, Long size, InputStream inputStream,
                 boolean isTrashed) {
         this.fileName = new FileName(fileName);
         this.contentType = contentType;
         this.size = size;
-        validateParent(parent);
-        this.parent = parent;
         this.inputStream = inputStream;
         this.isTrashed = isTrashed;
     }
 
-    public static File createRootFolder() {
+    public static File createDrive(UUID userId) {
         File file = new File();
-        file.setFileName("root");
+        file.setOwnerId(userId);
+        file.setFileName("drive");
         file.setContentType("drive");
         return file;
     }
 
+
     public void setFileName(String fileName) {
         this.fileName = new FileName(fileName);
-    }
-
-    public void setParent(File parent) {
-        validateParent(parent);
-        this.parent = parent;
     }
 
     public boolean isFile() {
         return FileType.of(contentType) == FileType.FILE;
     }
 
-    public Optional<Long> getParentId() {
-        if (parent == null) {
-            return Optional.empty();
-        }
-        return Optional.of(parent.getId());
+    public boolean isFolder() {
+        return FileType.of(contentType) == FileType.FOLDER;
     }
 
-    private void validateParent(File parent) {
-        if (parent.isFile()) {
-            throw new BadRequestException("Parent is not a directory");
+    @Override
+    public final boolean equals(Object o) {
+        if (this == o) {
+            return true;
         }
-        if (parent.isTrashed()) {
-            throw new BadRequestException("Parent is trashed");
+        if (o == null) {
+            return false;
         }
-        if (parent.getParent() == this) {
-            throw new BadRequestException("Parent is circular relationship");
+        Class<?> oEffectiveClass = o instanceof HibernateProxy
+                ? ((HibernateProxy) o).getHibernateLazyInitializer().getPersistentClass()
+                : o.getClass();
+        Class<?> thisEffectiveClass = this instanceof HibernateProxy
+                ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass()
+                : this.getClass();
+        if (thisEffectiveClass != oEffectiveClass) {
+            return false;
         }
+        File file = (File) o;
+        return getId() != null && Objects.equals(getId(), file.getId());
+    }
+
+    @Override
+    public final int hashCode() {
+        return this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer()
+                .getPersistentClass()
+                .hashCode() : getClass().hashCode();
     }
 }
