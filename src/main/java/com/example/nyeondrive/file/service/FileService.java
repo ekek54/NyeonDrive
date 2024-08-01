@@ -156,18 +156,17 @@ public class FileService {
     }
 
     private void detachSubtree(File file) {
-        loadDescendantClosures(file);
-        File parent = findParent(file);
-        loadAncestorClosures(parent);
-        List<File> descendantOfFile = file.getDescendantClosures()
+        loadAllClosures(file);
+        List<File> nodesInSubtree = file.getDescendantClosures()
                 .stream()
                 .map(FileClosure::getDescendant)
                 .toList();
-        List<File> ancestorOfParent = parent.getAncestorClosures()
+        List<File> ancestorsOfSubtreeRoot = file.getAncestorClosures()
                 .stream()
+                .filter(FileClosure::isNotSelf)
                 .map(FileClosure::getAncestor)
                 .toList();
-        fileClosureRepository.deleteAllInBatchByAncestorInAndDescendantIn(ancestorOfParent, descendantOfFile);
+        fileClosureRepository.deleteAllInBatchByAncestorInAndDescendantIn(ancestorsOfSubtreeRoot, nodesInSubtree);
     }
 
     private void attachSubtree(File file, File parent) {
@@ -191,9 +190,24 @@ public class FileService {
                 .orElseThrow(() -> new NotFoundException("File not found"));
     }
 
-    private File loadAncestorClosures(File file) {
-        return fileRepository.findWithAncestorClosuresById(file.getId())
+    private void loadAncestorClosures(File file) {
+        fileRepository.findWithAncestorClosuresById(file.getId())
                 .orElseThrow(() -> new NotFoundException("File not found"));
+        cacheParent(file);
+    }
+
+    private void loadAllClosures(File file) {
+        fileRepository.findWithAncestorClosuresAndDescendantClosuresById(file.getId())
+                .orElseThrow(() -> new NotFoundException("File not found"));
+        cacheParent(file);
+    }
+
+    private void cacheParent(File file) {
+        FileClosure parentClosure = file.getAncestorClosures().stream()
+                .filter(FileClosure::isImmediate)
+                .findFirst()
+                .orElse(null);
+        file.setParent(parentClosure == null ? null : parentClosure.getAncestor());
     }
 
     public List<FileDto> listFile(FileFilterDto fileFilterDto, FilePagingDto filePagingDto,
