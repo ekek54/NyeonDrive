@@ -61,6 +61,9 @@ public class File {
     private List<FileClosure> descendantClosures;
 
     @Transient
+    private File parent;
+
+    @Transient
     private InputStream inputStream;
 
 
