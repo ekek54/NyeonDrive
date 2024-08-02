@@ -86,7 +86,7 @@ public class FileService {
     }
 
     private boolean isAncestorTrashed(File file) {
-        List<FileClosure> trashedAncestorClosures = fileClosureRepository.findAllByDescendantAndAncestor_Trashed(
+        List<FileClosure> trashedAncestorClosures = fileClosureRepository.findAllByDescendantAndAncestor_isTrashed(
                 file, true);
         return !trashedAncestorClosures.isEmpty();
     }
