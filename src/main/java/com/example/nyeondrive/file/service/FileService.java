@@ -175,9 +175,22 @@ public class FileService {
         attachSubtree(file, newParent);
     }
 
+
+    /**
+     * 이동할 위치가 유효한지 확인
+     * 부모가 폴더인지 확인
+     * 순환 구조가 발생하는지 확인
+     * 부모 폴더가 삭제 상태인지 확인
+     * TODO: 부모 폴더내에 같은 이름의 파일이 있는지 확인
+     * @param file
+     * @param parent
+     */
     private void validateParent(File file, File parent) {
         if (parent.isFile()) {
             throw new BadRequestException("Parent is not a folder");
+        }
+        if (parent.isTrashed()) {
+            throw new BadRequestException("Parent is trashed");
         }
         if (detectCycle(file, parent)) {
             throw new BadRequestException("cycle detected");
