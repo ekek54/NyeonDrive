@@ -78,17 +78,21 @@ public class FileService {
             throw new BadRequestException("Parent file is trashed");
         }
         // 파일 및 부모 아이디 찾기
-        File file = fileRepository.findById(fileId).
-                orElseThrow(() -> new NotFoundException("File not found"));
-        Long parentId = findParent(file) == null ? null : findParent(file).getId();
-        return FileDto.of(parentId, file);
-
+        File file = findWithParent(fileId);
+        return FileDto.of(file.getParent().getId(), file);
     }
 
     private boolean isAncestorTrashed(File file) {
         List<FileClosure> trashedAncestorClosures = fileClosureRepository.findAllByDescendantAndAncestor_isTrashed(
                 file, true);
         return !trashedAncestorClosures.isEmpty();
+    }
+
+    private File findWithParent(Long fileId) {
+        File file = fileRepository.findWithAncestorClosuresById(fileId)
+                .orElseThrow(() -> new NotFoundException("File not found"));
+        cacheParent(file);
+        return file;
     }
 
     /**
