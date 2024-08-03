@@ -35,11 +35,8 @@ public class FileService {
 
     public FileDto createFile(CreateFileDto createFileDto) {
         // 조상이 될 파일 목록을 얻기 위해 부모 파일의 조상과 연결된 클로저 탐색.
-        File parentReference = fileRepository.getReferenceById(createFileDto.parentId());
-        List<FileClosure> ancestorClosures = fileClosureRepository.findAllByDescendant(parentReference);
-        if (ancestorClosures.isEmpty()) {
-            throw new BadRequestException("Parent not found");
-        }
+        File parent = fileRepository.findWithAncestorClosuresById(createFileDto.parentId())
+                .orElseThrow(() -> new NotFoundException("Parent not found"));
 
         // 파일 생성
         File file = File.builder()
@@ -47,17 +44,16 @@ public class FileService {
                 .contentType(createFileDto.contentType())
                 .isTrashed(createFileDto.isTrashed())
                 .build();
-        fileRepository.save(file);
 
         // 조상 파일 - 새 파일 클로저 생성
-        List<FileClosure> newClosures = new ArrayList<>();
-        for (FileClosure ancestorClosure : ancestorClosures) {
+        for (FileClosure ancestorClosure : parent.getAncestorClosures()) {
             FileClosure newClosure = FileClosure.builder()
                     .ancestor(ancestorClosure.getAncestor())
                     .descendant(file)
                     .depth(ancestorClosure.getDepth() + 1)
                     .build();
-            newClosures.add(newClosure);
+            parent.addDescendantClosure(newClosure);
+            file.addAncestorClosure(newClosure);
         }
 
         // 새 파일 - 새 파일 클로저 생성
@@ -66,8 +62,9 @@ public class FileService {
                 .descendant(file)
                 .depth(0L)
                 .build();
-        newClosures.add(selfClosure);
-        fileClosureRepository.saveAll(newClosures);
+        file.addDescendantClosure(selfClosure);
+        file.addAncestorClosure(selfClosure);
+        fileRepository.save(file);
         return FileDto.of(createFileDto.parentId(), file);
     }
 
@@ -182,8 +179,8 @@ public class FileService {
      * 순환 구조가 발생하는지 확인
      * 부모 폴더가 삭제 상태인지 확인
      * TODO: 부모 폴더내에 같은 이름의 파일이 있는지 확인
-     * @param file
-     * @param parent
+     * @param file: 이동할 파일
+     * @param parent: 새로운 부모 파일
      */
     private void validateParent(File file, File parent) {
         if (parent.isFile()) {

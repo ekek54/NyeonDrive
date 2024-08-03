@@ -2,6 +2,7 @@ package com.example.nyeondrive.file.entity;
 
 import com.example.nyeondrive.file.constant.FileType;
 import com.example.nyeondrive.file.vo.FileName;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
@@ -13,6 +14,8 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Transient;
 import java.io.InputStream;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -54,11 +57,11 @@ public class File {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    @OneToMany(mappedBy = "descendant")
-    private List<FileClosure> ancestorClosures;
+    @OneToMany(mappedBy = "descendant", cascade = {CascadeType.PERSIST, CascadeType.REMOVE})
+    private List<FileClosure> ancestorClosures = new ArrayList<>();
 
-    @OneToMany(mappedBy = "ancestor")
-    private List<FileClosure> descendantClosures;
+    @OneToMany(mappedBy = "ancestor", cascade = {CascadeType.PERSIST, CascadeType.REMOVE})
+    private List<FileClosure> descendantClosures = new ArrayList<>();
 
     @Transient
     private File parent;
@@ -85,6 +88,29 @@ public class File {
         return file;
     }
 
+    public List<FileClosure> getAncestorClosures() {
+        return Collections.unmodifiableList(ancestorClosures);
+    }
+
+    public void addAncestorClosure(FileClosure fileClosure) {
+        ancestorClosures.add(fileClosure);
+    }
+
+    public void removeAncestorClosure(FileClosure fileClosure) {
+        ancestorClosures.remove(fileClosure);
+    }
+
+    public List<FileClosure> getDescendantClosures() {
+        return Collections.unmodifiableList(descendantClosures);
+    }
+
+    public void addDescendantClosure(FileClosure fileClosure) {
+        descendantClosures.add(fileClosure);
+    }
+
+    public void removeDescendantClosure(FileClosure fileClosure) {
+        descendantClosures.remove(fileClosure);
+    }
 
     public void setFileName(String fileName) {
         this.fileName = new FileName(fileName);

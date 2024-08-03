@@ -48,4 +48,14 @@ public class FileClosure {
     public boolean isNotSelf() {
         return this.depth != 0;
     }
+
+    @Override
+    public String toString() {
+        return "FileClosure{" +
+                "id=" + id +
+                ", ancestor=" + ancestor.getId() +
+                ", descendant=" + descendant.getId() +
+                ", depth=" + depth +
+                '}';
+    }
 }
