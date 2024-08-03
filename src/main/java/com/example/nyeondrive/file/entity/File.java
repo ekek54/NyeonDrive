@@ -64,9 +64,6 @@ public class File {
     private List<FileClosure> descendantClosures = new ArrayList<>();
 
     @Transient
-    private File parent;
-
-    @Transient
     private InputStream inputStream;
 
 
@@ -122,6 +119,14 @@ public class File {
 
     public boolean isFolder() {
         return FileType.of(contentType) == FileType.FOLDER;
+    }
+
+    public File getParent() {
+        return ancestorClosures.stream()
+                .filter(FileClosure::isImmediate)
+                .findFirst()
+                .map(FileClosure::getAncestor)
+                .orElse(null);
     }
 
     @Override

@@ -16,7 +16,6 @@ import com.example.nyeondrive.file.repository.FileRepository;
 import jakarta.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -33,6 +32,13 @@ public class FileService {
         this.fileClosureRepository = fileClosureRepository;
     }
 
+    /**
+     * 파일 생성
+     * 조상 파일과 클로저를 생성한다.
+     * TODO: 부모 폴더 내에 같은 이름의 파일이 있는지 확인
+     * @param createFileDto: 파일 생성 정보
+     * @return:  생성된 파일
+     */
     public FileDto createFile(CreateFileDto createFileDto) {
         // 조상이 될 파일 목록을 얻기 위해 부모 파일의 조상과 연결된 클로저 탐색.
         File parent = fileRepository.findWithAncestorClosuresById(createFileDto.parentId())
@@ -68,50 +74,25 @@ public class FileService {
         return FileDto.of(createFileDto.parentId(), file);
     }
 
+    /**
+     * 파일 조회
+     * 상위 폴더가 삭제 상태인지 확인
+     * @param fileId: 조회 할 파일 아이디
+     * @return 조회된 파일
+     */
     public FileDto findFile(Long fileId) {
         // 상위 파일 삭제 여부 확인
-        File fileReference = fileRepository.getReferenceById(fileId);
-        if (isAncestorTrashed(fileReference)) {
+        if (isAncestorTrashed(fileId)) {
             throw new BadRequestException("Parent file is trashed");
         }
         // 파일 및 부모 아이디 찾기
-        File file = findWithParent(fileId);
+        File file = fileRepository.findWithAncestorClosuresById(fileId)
+                .orElseThrow(() -> new NotFoundException("File not found"));
         return FileDto.of(file.getParent().getId(), file);
     }
 
-    private boolean isAncestorTrashed(File file) {
-        List<FileClosure> trashedAncestorClosures = fileClosureRepository.findAllByDescendantAndAncestor_isTrashed(
-                file, true);
-        return !trashedAncestorClosures.isEmpty();
-    }
-
-    private File findWithParent(Long fileId) {
-        File file = fileRepository.findWithAncestorClosuresById(fileId)
-                .orElseThrow(() -> new NotFoundException("File not found"));
-        cacheParent(file);
-        return file;
-    }
-
-    /**
-     * 파일의 부모 파일을 찾는다.
-     * 캐싱된 부모 파일이 없으면 DB에서 조회하며 캐싱한다.
-     * 부모 파일은 아이디만 사용되는 경우가 많아 프록시 객체로 반환한다.
-     * @param file 파일
-     * @return 부모 파일
-     */
-    private File findParent(File file) {
-        // 캐싱된 부모 리턴
-        if (file.getParent() != null) {
-            return file.getParent();
-        }
-
-        // 부모 파일 조회
-        Optional<FileClosure> parentClosure = fileClosureRepository.findWithAncestorByDescendantAndDepth(file, 1L);
-        File parentReference = parentClosure
-                .map(FileClosure::getAncestor)
-                .orElse(null);
-        file.setParent(parentReference);
-        return file.getParent();
+    private boolean isAncestorTrashed(Long fileId) {
+        return fileRepository.existsByAncestorClosuresDescendantIdAndFile_isTrashed(fileId, true);
     }
 
     /**
@@ -138,7 +119,7 @@ public class FileService {
     }
 
     public FileDto updateFile(Long fileId, UpdateFileDto updateFileDto) {
-        File file = fileRepository.findById(fileId)
+        File file = fileRepository.findWithAncestorClosuresById(fileId)
                 .orElseThrow(() -> new NotFoundException("File not found"));
         if (updateFileDto.name() != null) {
             file.setFileName(updateFileDto.name());
@@ -153,8 +134,7 @@ public class FileService {
             file.setTrashed(updateFileDto.isTrashed());
         }
         fileRepository.save(file);
-        Long parentId = findParent(file).getId();
-        return FileDto.of(parentId, file);
+        return FileDto.of(file.getParent().getId(), file);
     }
 
     /**
@@ -215,7 +195,8 @@ public class FileService {
      * @param file
      */
     private void detachSubtree(File file) {
-        loadAllClosures(file);
+        fileRepository.findWithDescendantClosuresById(file.getId())
+                .orElseThrow(() -> new NotFoundException("File not found"));
         List<File> nodesInSubtree = file.getDescendantClosures()
                 .stream()
                 .map(FileClosure::getDescendant)
@@ -248,31 +229,6 @@ public class FileService {
             }
         }
         fileClosureRepository.saveAll(newClosures);
-    }
-
-    private void loadDescendantClosures(File file) {
-        fileRepository.findWithDescendantClosuresById(file.getId())
-                .orElseThrow(() -> new NotFoundException("File not found"));
-    }
-
-    private void loadAncestorClosures(File file) {
-        fileRepository.findWithAncestorClosuresById(file.getId())
-                .orElseThrow(() -> new NotFoundException("File not found"));
-        cacheParent(file);
-    }
-
-    private void loadAllClosures(File file) {
-        fileRepository.findWithAncestorClosuresAndDescendantClosuresById(file.getId())
-                .orElseThrow(() -> new NotFoundException("File not found"));
-        cacheParent(file);
-    }
-
-    private void cacheParent(File file) {
-        FileClosure parentClosure = file.getAncestorClosures().stream()
-                .filter(FileClosure::isImmediate)
-                .findFirst()
-                .orElse(null);
-        file.setParent(parentClosure == null ? null : parentClosure.getAncestor());
     }
 
     public List<FileDto> listFile(FileFilterDto fileFilterDto, FilePagingDto filePagingDto,
