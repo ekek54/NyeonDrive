@@ -129,9 +129,31 @@ public class FileService {
         return FileDto.of(null, drive);
     }
 
+
+    /**
+     * 파일 수정
+     * 파일 이름, 부모, 컨텐츠 타입, 삭제 상태를 변경한다.
+     * 삭제 상태를 해제해야 수정할 수 있다.
+     * @param fileId: 수정할 파일 아이디
+     * @param updateFileDto: 수정할 파일 정보
+     * @return 수정된 파일
+     */
     public FileDto updateFile(Long fileId, UpdateFileDto updateFileDto) {
         File file = fileRepository.findWithAncestorClosuresById(fileId)
                 .orElseThrow(() -> new NotFoundException("File not found"));
+        if (updateFileDto.isTrashed() != null) {
+            if (updateFileDto.isTrashed()) {
+                file.trash();
+            } else {
+                file.restore();
+            };
+        }
+        if (file.isTrashed()) {
+            throw new BadRequestException("File is trashed");
+        }
+        if (file.isAncestorTrashed()) {
+            throw new BadRequestException("Parent file is trashed");
+        }
         if (updateFileDto.name() != null) {
             file.setFileName(updateFileDto.name());
         }
@@ -140,9 +162,6 @@ public class FileService {
         }
         if (updateFileDto.contentType() != null) {
             file.setContentType(updateFileDto.contentType());
-        }
-        if (updateFileDto.isTrashed() != null) {
-            file.setTrashed(updateFileDto.isTrashed());
         }
         fileRepository.save(file);
         return FileDto.of(file.getParent().getId(), file);
