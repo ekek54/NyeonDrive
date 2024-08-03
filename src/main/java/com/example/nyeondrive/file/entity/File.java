@@ -89,6 +89,12 @@ public class File {
         return Collections.unmodifiableList(ancestorClosures);
     }
 
+    public List<File> getAncestors() {
+        return ancestorClosures.stream()
+                .map(FileClosure::getAncestor)
+                .toList();
+    }
+
     public void addAncestorClosure(FileClosure fileClosure) {
         ancestorClosures.add(fileClosure);
     }
@@ -99,6 +105,12 @@ public class File {
 
     public List<FileClosure> getDescendantClosures() {
         return Collections.unmodifiableList(descendantClosures);
+    }
+
+    public List<File> getDescendants() {
+        return descendantClosures.stream()
+                .map(FileClosure::getDescendant)
+                .toList();
     }
 
     public void addDescendantClosure(FileClosure fileClosure) {
@@ -119,6 +131,23 @@ public class File {
 
     public boolean isFolder() {
         return FileType.of(contentType) == FileType.FOLDER;
+    }
+
+    public boolean isTrashed() {
+        return isTrashed;
+    }
+
+    public void trash() {
+        isTrashed = true;
+    }
+
+    public void restore() {
+        isTrashed = false;
+    }
+
+    public boolean isAncestorTrashed() {
+        return getAncestors().stream()
+                .anyMatch(File::isTrashed);
     }
 
     public File getParent() {

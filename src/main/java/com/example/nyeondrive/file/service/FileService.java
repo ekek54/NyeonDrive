@@ -76,23 +76,33 @@ public class FileService {
 
     /**
      * 파일 조회
+     * 파일이 삭제 상태인지 확인
      * 상위 폴더가 삭제 상태인지 확인
      * @param fileId: 조회 할 파일 아이디
      * @return 조회된 파일
      */
     public FileDto findFile(Long fileId) {
-        // 상위 파일 삭제 여부 확인
-        if (isAncestorTrashed(fileId)) {
-            throw new BadRequestException("Parent file is trashed");
-        }
-        // 파일 및 부모 아이디 찾기
+        // 파일 삭제 여부 확인
         File file = fileRepository.findWithAncestorClosuresById(fileId)
                 .orElseThrow(() -> new NotFoundException("File not found"));
-        return FileDto.of(file.getParent().getId(), file);
-    }
+        if (file.isTrashed()) {
+            throw new NotFoundException("File is trashed");
+        }
 
-    private boolean isAncestorTrashed(Long fileId) {
-        return fileRepository.existsByAncestorClosuresDescendantIdAndFile_isTrashed(fileId, true);
+        // 상위 파일 삭제 여부 확인
+        List<Long> ancestorIds = file.getAncestors().stream().map(File::getId).toList();
+        fileRepository.findAllById(ancestorIds)
+                .forEach(ancestor -> {
+                    if (ancestor.isTrashed()) {
+                        throw new BadRequestException("Ancestor file is trashed");
+                    }
+                });
+        if (file.isAncestorTrashed()) {
+            throw new BadRequestException("Parent file is trashed");
+        }
+
+        // 파일 및 부모 아이디 찾기
+        return FileDto.of(file.getParent().getId(), file);
     }
 
     /**
@@ -108,13 +118,14 @@ public class FileService {
                     throw new BadRequestException("Drive already exists");
                 });
         File drive = File.createDrive(userId);
-        fileRepository.save(drive);
         FileClosure selfClosure = FileClosure.builder()
                 .ancestor(drive)
                 .descendant(drive)
                 .depth(0L)
                 .build();
-        fileClosureRepository.save(selfClosure);
+        drive.addDescendantClosure(selfClosure);
+        drive.addAncestorClosure(selfClosure);
+        fileRepository.save(drive);
         return FileDto.of(null, drive);
     }
 

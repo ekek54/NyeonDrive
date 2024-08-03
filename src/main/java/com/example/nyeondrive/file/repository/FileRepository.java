@@ -18,5 +18,5 @@ public interface FileRepository extends JpaRepository<File, Long> {
 
     Optional<File> findWithAncestorClosuresAndDescendantClosuresById(Long fileId);
 
-    Boolean existsByAncestorClosuresDescendantIdAndFile_isTrashed(Long descendantId, Boolean isTrashed);
+    Boolean existsByDescendantClosuresDescendantIdAndIsTrashed(Long descendantId, Boolean isTrashed);
 }
