@@ -177,47 +177,11 @@ public class FileService {
     private void moveFile(File file, Long newParentId) {
         File newParent = fileRepository.findWithAncestorClosuresById(newParentId)
                 .orElseThrow(() -> new BadRequestException("Parent not found"));
-        validateParent(file, newParent);
-        detachSubtree(file);
-        attachSubtree(file, newParent);
-    }
-
-
-    /**
-     * 이동할 위치가 유효한지 확인
-     * 부모가 폴더인지 확인
-     * 순환 구조가 발생하는지 확인
-     * 부모 폴더가 삭제 상태인지 확인
-     * TODO: 부모 폴더내에 같은 이름의 파일이 있는지 확인
-     * @param file: 이동할 파일
-     * @param parent: 새로운 부모 파일
-     */
-    private void validateParent(File file, File parent) {
-        if (parent.isFile()) {
-            throw new BadRequestException("Parent is not a folder");
-        }
-        if (parent.isTrashed()) {
-            throw new BadRequestException("Parent is trashed");
-        }
-        if (detectCycle(file, parent)) {
-            throw new BadRequestException("cycle detected");
+        if(newParent.canContain(file)) {
+            detachSubtree(file);
+            attachSubtree(file, newParent);
         }
     }
-
-
-    /**
-     * 새로운 폴더로 옮겨 졌을 때 순환 구조가 발생하는지 확인
-     * 새로운 폴더의 조상에 현재 파일이 이미 존재하는지 확인
-     * @param file
-     * @param parent
-     * @return
-     */
-    private boolean detectCycle(File file, File parent) {
-        return parent.getAncestorClosures()
-                .stream()
-                .anyMatch(ancestorClosure -> ancestorClosure.getAncestor().equals(file));
-    }
-
 
     /**
      * 파일의 서브트리를 전체 트리에서 분리한다.

@@ -158,6 +158,31 @@ public class File {
                 .orElse(null);
     }
 
+    /**
+     * 파일을 포함할 수 있는지 확인
+     * 부모가 폴더인지 확인
+     * 순환 구조가 발생하는지 확인
+     * 부모 폴더가 삭제 상태인지 확인
+     * TODO: 부모 폴더내에 같은 이름의 파일이 있는지 확인
+     * @param file: 이동할 파일
+     * @return: 유효한 위치인지 여부
+     */
+    public boolean canContain(File file) {
+        if (isTrashed()) {
+            throw new IllegalStateException("Trashed File cannot contain another file");
+        }
+        if (isFile()) {
+            throw new IllegalArgumentException("File cannot contain another file");
+        }
+        if (isAncestorTrashed()) {
+            throw new IllegalStateException("Ancestor is trashed");
+        }
+        if (getAncestors().contains(file)) {
+            throw new IllegalStateException("Cycle detected");
+        }
+        return true;
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (this == o) {
