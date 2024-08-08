@@ -99,8 +99,12 @@ public class File {
         ancestorClosures.add(fileClosure);
     }
 
-    public void removeAncestorClosure(FileClosure fileClosure) {
-        ancestorClosures.remove(fileClosure);
+    public void removeAncestor(File ancestor) {
+        ancestorClosures.removeIf(fileClosure -> fileClosure.getAncestor().equals(ancestor));
+    }
+
+    public void removeAncestors(List<File> ancestors) {
+        ancestorClosures.removeIf(fileClosure -> ancestors.contains(fileClosure.getAncestor()));
     }
 
     public List<FileClosure> getDescendantClosures() {
@@ -117,8 +121,12 @@ public class File {
         descendantClosures.add(fileClosure);
     }
 
-    public void removeDescendantClosure(FileClosure fileClosure) {
-        descendantClosures.remove(fileClosure);
+    public void removeDescendant(File descendant) {
+        descendantClosures.removeIf(fileClosure -> fileClosure.getDescendant().equals(descendant));
+    }
+
+    public void removeDescendants(List<File> descendants) {
+        descendantClosures.removeIf(fileClosure -> descendants.contains(fileClosure.getDescendant()));
     }
 
     public void setFileName(String fileName) {
@@ -151,6 +159,7 @@ public class File {
     }
 
     public File getParent() {
+        System.out.println("getAncestorClosures: " + getAncestorClosures());
         return ancestorClosures.stream()
                 .filter(FileClosure::isImmediate)
                 .findFirst()
@@ -177,10 +186,46 @@ public class File {
         if (isAncestorTrashed()) {
             throw new IllegalStateException("Ancestor is trashed");
         }
+        if (equals(file.getParent())) {
+            throw new IllegalStateException("Already in this folder");
+        }
         if (getAncestors().contains(file)) {
             throw new IllegalStateException("Cycle detected");
         }
         return true;
+    }
+
+    public void moveTo(File newParent) {
+        if (newParent.canContain(this)) {
+            detach();
+            attach(newParent);
+        }
+    }
+
+    private void detach() {
+        List<File> ancestorsExcludeThis = getAncestors().stream()
+                .filter(ancestor -> !ancestor.equals(this))
+                .toList();
+        List<File> nodesOfSubtree = getDescendants();
+        ancestorsExcludeThis.forEach(ancestor ->
+                ancestor.removeDescendants(nodesOfSubtree)
+        );
+    }
+
+    private void attach(File newParent) {
+        for (FileClosure ancestorClosure : newParent.getAncestorClosures()) {
+            for (FileClosure descendantClosure : getDescendantClosures()) {
+                System.out.println("ancestorClosure: " + ancestorClosure);
+                System.out.println("descendantClosure: " + descendantClosure);
+                FileClosure newClosure = FileClosure.builder()
+                        .ancestor(ancestorClosure.getAncestor())
+                        .descendant(descendantClosure.getDescendant())
+                        .depth(ancestorClosure.getDepth() + descendantClosure.getDepth() + 1)
+                        .build();
+                System.out.println("newClosure: " + newClosure);
+                ancestorClosure.getAncestor().addDescendantClosure(newClosure);
+            }
+        }
     }
 
     @Override
