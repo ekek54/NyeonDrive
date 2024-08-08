@@ -57,10 +57,10 @@ public class File {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    @OneToMany(mappedBy = "descendant", cascade = {CascadeType.PERSIST, CascadeType.REMOVE})
+    @OneToMany(mappedBy = "descendant")
     private List<FileClosure> ancestorClosures = new ArrayList<>();
 
-    @OneToMany(mappedBy = "ancestor", cascade = {CascadeType.PERSIST, CascadeType.REMOVE})
+    @OneToMany(mappedBy = "ancestor", cascade = {CascadeType.PERSIST, CascadeType.REMOVE}, orphanRemoval = true)
     private List<FileClosure> descendantClosures = new ArrayList<>();
 
     @Transient
