@@ -1,22 +1,26 @@
 package com.example.nyeondrive.file.repository;
 
 import com.example.nyeondrive.file.entity.File;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.NonNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
-public interface FileRepository extends JpaRepository<File, Long> {
-    @NonNull Optional<File> findById(@NonNull Long fileId);
+public interface FileRepository extends JpaRepository<File, Long>, FileRepositoryCustom {
+    @NonNull
+    Optional<File> findById(@NonNull Long fileId);
+
     Optional<File> findByOwnerIdAndContentType(UUID ownerId, String contentType);
 
     @Query("SELECT f FROM File f JOIN FETCH f.ancestorClosures WHERE f.id = :fileId")
     Optional<File> findWithAncestorClosuresById(Long fileId);
 
-    Optional<File> findWithDescendantClosuresById(Long fileId);
+    @Query("select f from File f inner join f.descendantClosures descendantClosures where descendantClosures.descendant = ?1")
+    List<File> findAllByDescendant(File file);
 
-    Optional<File> findWithAncestorClosuresAndDescendantClosuresById(Long fileId);
-
-    Boolean existsByDescendantClosuresDescendantIdAndIsTrashed(Long descendantId, Boolean isTrashed);
+    @Query("select f from File f join fetch f.ancestorClosures where f.id in ?1")
+    List<File> findAllWithAncestorClosuresByIdIn(Collection<Long> id);
 }

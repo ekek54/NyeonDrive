@@ -7,6 +7,7 @@ import com.example.nyeondrive.file.constant.FileOrderField;
 import com.example.nyeondrive.file.dto.service.FileFilterDto;
 import com.example.nyeondrive.file.dto.service.FileOrderDto;
 import com.example.nyeondrive.file.dto.service.FilePagingDto;
+import com.example.nyeondrive.file.entity.File;
 import com.example.nyeondrive.file.entity.FileClosure;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
@@ -23,7 +24,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 @RequiredArgsConstructor
-public class FileClosureRepositoryCustomImpl implements FileClosureRepositoryCustom {
+public class FileRepositoryCustomImpl implements FileRepositoryCustom {
     private final JPAQueryFactory queryFactory;
     private static final Map<FileOrderField, ComparableExpressionBase<?>> orderFieldMap = Map.of(
             FileOrderField.ID, file.id,
@@ -36,22 +37,20 @@ public class FileClosureRepositoryCustomImpl implements FileClosureRepositoryCus
     );
 
     @Override
-    public List<FileClosure> findAll(
+    public List<File> findAll(
             FileFilterDto fileFilterDto,
             FilePagingDto filePagingDto,
             List<FileOrderDto> fileOrderDtos
     ) {
-        System.out.println(fileFilterDto.parentId());
-        JPAQuery<FileClosure> query = queryFactory
-                .select(fileClosure)
-                .from(fileClosure)
-                .join(fileClosure.descendant)
+        JPAQuery<File> query = queryFactory
+                .select(file)
+                .from(file)
+                .join(file.ancestorClosures)
                 .fetchJoin()
                 .where(
                         nameEq(fileFilterDto.name()),
                         contentTypeEq(fileFilterDto.contentType()),
                         isTrashedEq(fileFilterDto.isTrashed()),
-                        fileClosure.depth.eq(1L),
                         parentIdEq(fileFilterDto.parentId())
                 )
                 .orderBy(getOrderSpecifiers(fileOrderDtos));
@@ -66,7 +65,11 @@ public class FileClosureRepositoryCustomImpl implements FileClosureRepositoryCus
     }
 
     private BooleanExpression parentIdEq(Long parentId) {
-        return parentId != null ? fileClosure.ancestor.id.eq(parentId) : null;
+        return parentId != null ?  fileClosure.ancestor.id.eq(parentId).and(depthEq(1L)): null;
+    }
+
+    private BooleanExpression depthEq(Long depth) {
+        return depth != null ? fileClosure.depth.eq(depth) : null;
     }
 
     private BooleanExpression isTrashedEq(Boolean isTrashed) {

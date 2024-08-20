@@ -8,6 +8,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,6 +19,14 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
+@Table(
+      uniqueConstraints = {
+            @UniqueConstraint(
+                  name = "ancestor_descendant_depth_unique",
+                  columnNames = {"ancestor_id", "descendant_id", "depth"}
+            )
+      }
+)
 public class FileClosure {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -47,6 +57,14 @@ public class FileClosure {
 
     public boolean isNotSelf() {
         return this.depth != 0;
+    }
+
+    public boolean ancestorIs(File file) {
+        return this.ancestor.equals(file);
+    }
+
+    public boolean descendantIs(File file) {
+        return this.descendant.equals(file);
     }
 
     @Override
