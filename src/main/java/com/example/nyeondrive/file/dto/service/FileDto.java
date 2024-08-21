@@ -13,12 +13,12 @@ public record FileDto(
         Boolean isTrashed,
         LocalDateTime createdAt
 ) {
-    public static FileDto of(Long parentId, File file) {
+    public static FileDto of(File file) {
         return new FileDto(
                 file.getId(),
                 file.getOwnerId(),
                 file.getFileName().toString(),
-                parentId,
+                file.getParentId(),
                 file.getContentType(),
                 file.isTrashed(),
                 file.getCreatedAt()

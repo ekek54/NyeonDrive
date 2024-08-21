@@ -42,3 +42,5 @@ out/
 
 ### QueryDSL ###
 /src/main/generated/
+
+/src/main/resources/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports

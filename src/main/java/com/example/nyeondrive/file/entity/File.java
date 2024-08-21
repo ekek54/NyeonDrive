@@ -1,7 +1,9 @@
 package com.example.nyeondrive.file.entity;
 
+import com.example.nyeondrive.exception.error.BadRequestException;
 import com.example.nyeondrive.file.constant.FileType;
 import com.example.nyeondrive.file.vo.FileName;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
@@ -13,21 +15,25 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Transient;
 import java.io.InputStream;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.function.Predicate;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.proxy.HibernateProxy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+@Slf4j
 @Entity
-@Getter
-@Setter
 @NoArgsConstructor
+@Getter
 @EntityListeners(AuditingEntityListener.class)
 public class File {
     @Id
@@ -36,9 +42,11 @@ public class File {
     private Long id;
 
     @Embedded
+    @Setter
     private FileName fileName;
 
     @Column(name = "content_type")
+    @Setter
     private String contentType;
 
     @Column(name = "file_size")
@@ -54,14 +62,11 @@ public class File {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    @OneToMany(mappedBy = "descendant")
-    private List<FileClosure> ancestorClosures;
+    @OneToMany(mappedBy = "descendant", cascade = CascadeType.ALL, orphanRemoval = true)
+    private final List<FileClosure> ancestorClosures = new ArrayList<>();
 
     @OneToMany(mappedBy = "ancestor")
-    private List<FileClosure> descendantClosures;
-
-    @Transient
-    private File parent;
+    private final List<FileClosure> descendantClosures = new ArrayList<>();
 
     @Transient
     private InputStream inputStream;
@@ -75,19 +80,24 @@ public class File {
         this.size = size;
         this.inputStream = inputStream;
         this.isTrashed = isTrashed;
+        ancestorClosures.add(FileClosure.builder()
+                .ancestor(this)
+                .descendant(this)
+                .depth(0L)
+                .build());
     }
 
     public static File createDrive(UUID userId) {
         File file = new File();
-        file.setOwnerId(userId);
-        file.setFileName("drive");
-        file.setContentType("drive");
+        file.ownerId = userId;
+        file.fileName = new FileName("drive");
+        file.contentType = "drive";
+        file.ancestorClosures.add(FileClosure.builder()
+                .ancestor(file)
+                .descendant(file)
+                .depth(0L)
+                .build());
         return file;
-    }
-
-
-    public void setFileName(String fileName) {
-        this.fileName = new FileName(fileName);
     }
 
     public boolean isFile() {
@@ -96,6 +106,138 @@ public class File {
 
     public boolean isFolder() {
         return FileType.of(contentType) == FileType.FOLDER;
+    }
+
+    public boolean isTrashed() {
+        return isTrashed;
+    }
+
+    public void trash() {
+        isTrashed = true;
+    }
+
+    public void restore() {
+        isTrashed = false;
+    }
+
+    /**
+     * @return 파일이 존재하는 트리에서의 깊이
+     */
+    public Long getDepth() {
+        return ancestorClosures.stream()
+                .map(FileClosure::getDepth)
+                .max(Long::compareTo)
+                .orElse(0L);
+    }
+
+    public File getParent() {
+        return ancestorClosures.stream()
+                .filter(ancestorClosure -> ancestorClosure.getDepth() == 1)
+                .map(FileClosure::getAncestor)
+                .findFirst()
+                .orElse(null);
+    }
+
+    public Long getParentId() {
+        File parent = getParent();
+        return parent == null ? null : parent.getId();
+    }
+
+    public List<FileClosure> getAncestorClosures() {
+        return Collections.unmodifiableList(ancestorClosures);
+    }
+
+    public List<File> getDescendants() {
+        return descendantClosures.stream()
+                .map(FileClosure::getDescendant)
+                .toList();
+    }
+
+    public void addAncestorClosure(FileClosure ancestorClosure) {
+        ancestorClosures.add(ancestorClosure);
+    }
+
+    public void removeAncestorClosureIf(Predicate<FileClosure> filter) {
+        ancestorClosures.removeIf(filter);
+    }
+
+    public void moveTo(File newParent) {
+        log.info("moveTo");
+        newParent.validContainable(this);
+        changeParent(newParent);
+        syncPathOfDescendants();
+    }
+
+    private void changeParent(File newParent) {
+        log.info("changeParent");
+        ancestorClosures.removeIf(ancestorClosure -> ancestorClosure.getDepth() >= 1);
+        newParent.getAncestorClosures().stream().map(ancestorClosure -> FileClosure.builder()
+                .ancestor(ancestorClosure.getAncestor())
+                .descendant(this)
+                .depth(ancestorClosure.getDepth() + 1)
+                .build()
+        ).forEach(ancestorClosures::add);
+    }
+
+    private void syncPathOfDescendants() {
+        log.info("syncPathOfDescendants");
+        descendantClosures.stream()
+                .map(FileClosure::getDescendant)
+                .filter(descendant -> !descendant.equals(this))
+                .forEach(descendant -> descendant.syncPathWith(this));
+    }
+
+    private void syncPathWith(File targetAncestor) {
+        Long targetDepth = getAncestorClosures().stream()
+                .filter(ancestorClosure -> ancestorClosure.ancestorIs(targetAncestor))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("Target is not ancestor"))
+                .getDepth();
+        removeAncestorClosureIf(ancestorClosure -> ancestorClosure.getDepth() > targetDepth);
+        targetAncestor.getAncestorClosures().stream()
+                .filter(ancestorClosure -> ancestorClosure.getDepth() > 0)
+                .map(ancestorClosure -> FileClosure.builder()
+                        .ancestor(ancestorClosure.getAncestor())
+                        .descendant(this)
+                        .depth(ancestorClosure.getDepth() + targetDepth)
+                        .build()
+                ).forEach(this::addAncestorClosure);
+    }
+
+    /**
+     * 특정 파일을 후손으로 연결할 수 있는지 검증합니다.
+     * @param file 후손으로 연결할 파일
+     */
+    public void validContainable(File file) {
+        log.info("validContainable");
+        if (isTrashed()) {
+            throw new BadRequestException("new parent is trashed");
+        }
+
+        if (isAncestorTrashed()) {
+            throw new BadRequestException("new parent's ancestor is trashed");
+        }
+
+        if (cycleDetected(file)) {
+            throw new BadRequestException("cycle detected");
+        }
+    }
+
+    /**
+     * 조상 파일 중 하나라도 삭제 상태인지 확인합니다.
+     * @return
+     */
+    public boolean isAncestorTrashed() {
+        log.info("isAncestorTrashed");
+        return ancestorClosures.stream()
+                .map(FileClosure::getAncestor)
+                .anyMatch(File::isTrashed);
+    }
+
+    private boolean cycleDetected(File file) {
+        return ancestorClosures.stream()
+                .map(FileClosure::getAncestor)
+                .anyMatch(file::equals);
     }
 
     @Override
