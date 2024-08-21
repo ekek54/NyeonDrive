@@ -23,4 +23,6 @@ public interface FileRepository extends JpaRepository<File, Long>, FileRepositor
 
     @Query("select f from File f join fetch f.ancestorClosures where f.id in ?1")
     List<File> findAllWithAncestorClosuresByIdIn(Collection<Long> id);
+
+    List<File> findAllByIdIn(List<Long> descendantIds);
 }

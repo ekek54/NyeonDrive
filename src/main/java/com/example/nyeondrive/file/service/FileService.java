@@ -101,7 +101,8 @@ public class FileService {
     }
 
     /**
-     * 파일 수정 파일 이름, 부모, 컨텐츠 타입, 삭제 상태를 변경한다. 삭제 상태를 해제해야 수정할 수 있다.
+     * 파일 수정 파일 이름, 부모, 컨텐츠 타입, 삭제 상태를 변경한다.
+     * TODO: 파일 복구시 기존 경로가 삭제된 경로라면 드라이브에 복구한다.
      *
      * @param fileId:        수정할 파일 아이디
      * @param updateFileDto: 수정할 파일 정보
@@ -111,22 +112,13 @@ public class FileService {
         log.info("update file");
         File file = fileRepository.findWithAncestorClosuresById(fileId)
                 .orElseThrow(() -> new NotFoundException("File not found"));
-        log.info("file found");
+
         if (updateFileDto.isTrashed() != null) {
             if (updateFileDto.isTrashed()) {
                 file.trash();
             } else {
                 file.restore();
             }
-            ;
-        }
-        if (file.isTrashed()) {
-            throw new BadRequestException("File is trashed");
-        }
-
-        loadAncestors(file);
-        if (file.isAncestorTrashed()) {
-            throw new BadRequestException("Parent file is trashed");
         }
 
         if (updateFileDto.name() != null) {
@@ -156,13 +148,20 @@ public class FileService {
         File newParent = fileRepository.findWithAncestorClosuresById(newParentId)
                 .orElseThrow(() -> new BadRequestException("Parent not found"));
         loadDescendantsWithAncestorClosures(file);
+        loadDescendants(newParent);
         file.moveTo(newParent);
     }
 
-    private void loadDescendantsWithAncestorClosures(File file) {
+    private List<File> loadDescendantsWithAncestorClosures(File file) {
         log.info("load descendants with ancestor closures");
         List<Long> descendantIds = file.getDescendants().stream().map(File::getId).toList();
-        List<File> descendants = fileRepository.findAllWithAncestorClosuresByIdIn(descendantIds);
+        return fileRepository.findAllWithAncestorClosuresByIdIn(descendantIds);
+    }
+
+    private List<File> loadDescendants(File file) {
+        log.info("load descendants");
+        List<Long> descendantIds = file.getDescendants().stream().map(File::getId).toList();
+        return fileRepository.findAllByIdIn(descendantIds);
     }
 
     public List<FileDto> listFile(FileFilterDto fileFilterDto, FilePagingDto filePagingDto,

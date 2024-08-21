@@ -153,6 +153,13 @@ public class File {
                 .toList();
     }
 
+    public List<File> getChildren() {
+        return descendantClosures.stream()
+                .filter(FileClosure::isImmediate)
+                .map(FileClosure::getDescendant)
+                .toList();
+    }
+
     public void addAncestorClosure(FileClosure ancestorClosure) {
         ancestorClosures.add(ancestorClosure);
     }
@@ -221,6 +228,10 @@ public class File {
         if (cycleDetected(file)) {
             throw new BadRequestException("cycle detected");
         }
+
+        if (isExist(file.getFileName())) {
+            throw new BadRequestException("file already exists");
+        }
     }
 
     /**
@@ -238,6 +249,12 @@ public class File {
         return ancestorClosures.stream()
                 .map(FileClosure::getAncestor)
                 .anyMatch(file::equals);
+    }
+
+    public boolean isExist(FileName fileName) {
+        return getChildren().stream()
+                .map(File::getFileName)
+                .anyMatch(fileName::equals);
     }
 
     @Override
