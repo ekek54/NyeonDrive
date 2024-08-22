@@ -17,6 +17,7 @@ import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -36,38 +37,29 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @Getter
 @EntityListeners(AuditingEntityListener.class)
 public class File {
+    @OneToMany(mappedBy = "descendant", cascade = CascadeType.ALL, orphanRemoval = true)
+    private final List<FileClosure> ancestorClosures = new ArrayList<>();
+    @OneToMany(mappedBy = "ancestor")
+    private final List<FileClosure> descendantClosures = new ArrayList<>();
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "file_id")
     private Long id;
-
     @Embedded
     @Setter
     private FileName fileName;
-
     @Column(name = "content_type")
     @Setter
     private String contentType;
-
     @Column(name = "file_size")
     private Long size;
-
     @Column(name = "is_trashed")
     private boolean isTrashed = false;
-
     @Column(name = "owner_id")
     private UUID ownerId;
-
     @CreatedDate
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
-
-    @OneToMany(mappedBy = "descendant", cascade = CascadeType.ALL, orphanRemoval = true)
-    private final List<FileClosure> ancestorClosures = new ArrayList<>();
-
-    @OneToMany(mappedBy = "ancestor")
-    private final List<FileClosure> descendantClosures = new ArrayList<>();
-
     @Transient
     private InputStream inputStream;
 
@@ -136,6 +128,13 @@ public class File {
                 .map(FileClosure::getAncestor)
                 .findFirst()
                 .orElse(null);
+    }
+
+    public File getDrive() {
+        return ancestorClosures.stream()
+                .max(Comparator.comparing(FileClosure::getDepth))
+                .orElseThrow(() -> new IllegalStateException("Drive not found"))
+                .getAncestor();
     }
 
     public Long getParentId() {
@@ -213,6 +212,7 @@ public class File {
 
     /**
      * 특정 파일을 후손으로 연결할 수 있는지 검증합니다.
+     *
      * @param file 후손으로 연결할 파일
      */
     public void validContainable(File file) {
@@ -236,6 +236,7 @@ public class File {
 
     /**
      * 조상 파일 중 하나라도 삭제 상태인지 확인합니다.
+     *
      * @return
      */
     public boolean isAncestorTrashed() {

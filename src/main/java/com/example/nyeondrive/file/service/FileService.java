@@ -30,7 +30,6 @@ public class FileService {
 
     /**
      * 파일 생성 조상 파일과 클로저를 생성한다.
-     * TODO: 부모 폴더 내에 같은 이름의 파일이 있는지 확인
      *
      * @param createFileDto: 파일 생성 정보
      * @return: 생성된 파일
@@ -102,7 +101,6 @@ public class FileService {
 
     /**
      * 파일 수정 파일 이름, 부모, 컨텐츠 타입, 삭제 상태를 변경한다.
-     * TODO: 파일 복구시 기존 경로가 삭제된 경로라면 드라이브에 복구한다.
      *
      * @param fileId:        수정할 파일 아이디
      * @param updateFileDto: 수정할 파일 정보
@@ -117,6 +115,9 @@ public class FileService {
             if (updateFileDto.isTrashed()) {
                 file.trash();
             } else {
+                if(file.isAncestorTrashed()) {
+                    moveFile(file, file.getDrive().getId());
+                }
                 file.restore();
             }
         }
