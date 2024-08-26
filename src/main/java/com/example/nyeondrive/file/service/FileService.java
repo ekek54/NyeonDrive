@@ -171,4 +171,16 @@ public class FileService {
                 .map(FileDto::of)
                 .toList();
     }
+
+    public void deleteFile(Long fileId) {
+        File file = fileRepository.findWithAncestorClosuresById(fileId)
+                .orElseThrow(() -> new NotFoundException("File not found"));
+        if (file.isDrive()) {
+            throw new BadRequestException("Drive cannot be deleted");
+        }
+        List<File> descendants = loadDescendantsWithAncestorClosures(file);
+        descendants.forEach(File::clearAncestorClosures);
+        fileRepository.flush();
+        fileRepository.deleteAllInBatch(descendants);
+    }
 }

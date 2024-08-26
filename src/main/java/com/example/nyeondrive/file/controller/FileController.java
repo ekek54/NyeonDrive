@@ -17,6 +17,7 @@ import java.util.UUID;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -107,11 +108,11 @@ public class FileController {
         return ResponseEntity.ok()
                 .body(files);
     }
-//
-//    @DeleteMapping(path = "/{fileId}")
-//    public ResponseEntity<Void> deleteFile(@PathVariable("fileId") Long fileId) {
-//        fileService.deleteFile(fileId);
-//        return ResponseEntity.noContent()
-//                .build();
-//    }
+
+    @DeleteMapping(path = "/{fileId}")
+    public ResponseEntity<Void> deleteFile(@PathVariable("fileId") Long fileId) {
+        fileService.deleteFile(fileId);
+        return ResponseEntity.noContent()
+                .build();
+    }
 }

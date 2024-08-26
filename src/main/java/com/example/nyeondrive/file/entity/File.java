@@ -37,29 +37,38 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @Getter
 @EntityListeners(AuditingEntityListener.class)
 public class File {
-    @OneToMany(mappedBy = "descendant", cascade = CascadeType.ALL, orphanRemoval = true)
-    private final List<FileClosure> ancestorClosures = new ArrayList<>();
-    @OneToMany(mappedBy = "ancestor")
-    private final List<FileClosure> descendantClosures = new ArrayList<>();
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "file_id")
     private Long id;
+
     @Embedded
     @Setter
     private FileName fileName;
+
     @Column(name = "content_type")
     @Setter
     private String contentType;
+
     @Column(name = "file_size")
     private Long size;
+
     @Column(name = "is_trashed")
     private boolean isTrashed = false;
+
     @Column(name = "owner_id")
     private UUID ownerId;
+
     @CreatedDate
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    @OneToMany(mappedBy = "descendant", cascade = CascadeType.ALL, orphanRemoval = true)
+    private final List<FileClosure> ancestorClosures = new ArrayList<>();
+
+    @OneToMany(mappedBy = "ancestor")
+    private final List<FileClosure> descendantClosures = new ArrayList<>();
+
     @Transient
     private InputStream inputStream;
 
@@ -98,6 +107,10 @@ public class File {
 
     public boolean isFolder() {
         return FileType.of(contentType) == FileType.FOLDER;
+    }
+
+    public boolean isDrive() {
+        return FileType.of(contentType) == FileType.DRIVE;
     }
 
     public boolean isTrashed() {
@@ -167,6 +180,10 @@ public class File {
         ancestorClosures.removeIf(filter);
     }
 
+    public void clearAncestorClosures() {
+        ancestorClosures.clear();
+    }
+
     public void moveTo(File newParent) {
         log.info("moveTo");
         newParent.validContainable(this);
@@ -230,7 +247,7 @@ public class File {
         }
 
         if (isExist(file.getFileName())) {
-            throw new BadRequestException("file already exists");
+            throw new BadRequestException("file name duplicated");
         }
     }
 
