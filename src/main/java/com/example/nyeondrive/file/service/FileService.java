@@ -1,6 +1,7 @@
 package com.example.nyeondrive.file.service;
 
 import com.example.nyeondrive.exception.error.BadRequestException;
+import com.example.nyeondrive.exception.error.ForbiddenException;
 import com.example.nyeondrive.exception.error.NotFoundException;
 import com.example.nyeondrive.file.constant.FileType;
 import com.example.nyeondrive.file.dto.service.CreateFileDto;
@@ -31,10 +32,11 @@ public class FileService {
     /**
      * 파일 생성 조상 파일과 클로저를 생성한다.
      *
-     * @param createFileDto: 파일 생성 정보
+     * @param createFileDto : 파일 생성 정보
+     * @param userId : 사용자 아이디
      * @return: 생성된 파일
      */
-    public FileDto createFile(CreateFileDto createFileDto) {
+    public FileDto createFile(CreateFileDto createFileDto, UUID userId) {
         // 조상이 될 파일 목록을 얻기 위해 부모 파일의 조상과 연결된 클로저 탐색.
         File parent = fileRepository.findWithAncestorClosuresById(createFileDto.parentId())
                 .orElseThrow(() -> new NotFoundException("Parent not found"));
@@ -42,27 +44,36 @@ public class FileService {
         // 파일 생성
         File file = File.builder()
                 .fileName(createFileDto.name())
+                .ownerId(userId)
                 .contentType(createFileDto.contentType())
                 .isTrashed(createFileDto.isTrashed())
                 .build();
-
         file.moveTo(parent);
         fileRepository.save(file);
         return FileDto.of(file);
     }
 
     /**
-     * 파일 조회 파일이 삭제 상태인지 확인 상위 폴더가 삭제 상태인지 확인
+     * 파일 조회
+     * 파일이 삭제 상태인지 확인
+     * 파일 소유자인지 확인
+     * 상위 폴더가 삭제 상태인지 확인
      *
-     * @param fileId: 조회 할 파일 아이디
+     * @param fileId : 조회 할 파일 아이디
+     * @param userId : 요청 사용자 아이디
      * @return 조회된 파일
      */
-    public FileDto findFile(Long fileId) {
+    public FileDto findFile(Long fileId, UUID userId) {
         // 파일 삭제 여부 확인
         File file = fileRepository.findWithAncestorClosuresById(fileId)
                 .orElseThrow(() -> new NotFoundException("File not found"));
         if (file.isTrashed()) {
             throw new NotFoundException("File is trashed");
+        }
+
+        // 파일 소유자인지 검증
+        if (!file.isOwner(userId)) {
+            throw new ForbiddenException("User is not owner");
         }
 
         // 상위 파일 삭제 여부 확인
@@ -73,6 +84,12 @@ public class FileService {
 
         // 파일 및 부모 아이디 찾기
         return FileDto.of(file);
+    }
+
+    public FileDto findDrive(UUID userId) {
+        File drive = fileRepository.findByOwnerIdAndContentType(userId, FileType.DRIVE_CONTENT_TYPE)
+                .orElseThrow(() -> new NotFoundException("Drive not found"));
+        return FileDto.of(drive);
     }
 
     private void loadAncestors(File file) {
@@ -106,15 +123,20 @@ public class FileService {
      * @param updateFileDto: 수정할 파일 정보
      * @return 수정된 파일
      */
-    public FileDto updateFile(Long fileId, UpdateFileDto updateFileDto) {
+    public FileDto updateFile(Long fileId, UpdateFileDto updateFileDto, UUID userId) {
         log.info("update file");
         File file = fileRepository.findWithAncestorClosuresById(fileId)
                 .orElseThrow(() -> new NotFoundException("File not found"));
+
+        if (!file.isOwner(userId)) {
+            throw new ForbiddenException("User is not owner");
+        }
 
         if (updateFileDto.isTrashed() != null) {
             if (updateFileDto.isTrashed()) {
                 file.trash();
             } else {
+                // 파일 복원시 부모가 삭제 상태인 경우 드라이브에 복원
                 if(file.isAncestorTrashed()) {
                     moveFile(file, file.getDrive().getId());
                 }
@@ -148,6 +170,9 @@ public class FileService {
         log.info("find new parent");
         File newParent = fileRepository.findWithAncestorClosuresById(newParentId)
                 .orElseThrow(() -> new BadRequestException("Parent not found"));
+        if (newParent.isTrashed()) {
+            throw new BadRequestException("New parent is trashed");
+        }
         loadDescendantsWithAncestorClosures(file);
         loadDescendants(newParent);
         file.moveTo(newParent);
@@ -166,15 +191,18 @@ public class FileService {
     }
 
     public List<FileDto> listFile(FileFilterDto fileFilterDto, FilePagingDto filePagingDto,
-                                  List<FileOrderDto> fileOrderDtos) {
-        return fileRepository.findAll(fileFilterDto, filePagingDto, fileOrderDtos).stream()
+                                  List<FileOrderDto> fileOrderDtos, UUID userId) {
+        return fileRepository.findAll(fileFilterDto, filePagingDto, fileOrderDtos, userId).stream()
                 .map(FileDto::of)
                 .toList();
     }
 
-    public void deleteFile(Long fileId) {
+    public void deleteFile(Long fileId, UUID userId) {
         File file = fileRepository.findWithAncestorClosuresById(fileId)
                 .orElseThrow(() -> new NotFoundException("File not found"));
+        if (file.isOwner(userId)) {
+            throw new ForbiddenException("User is not owner");
+        }
         if (file.isDrive()) {
             throw new BadRequestException("Drive cannot be deleted");
         }

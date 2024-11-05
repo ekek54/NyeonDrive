@@ -1,6 +1,7 @@
 package com.example.nyeondrive.file.entity;
 
 import com.example.nyeondrive.exception.error.BadRequestException;
+import com.example.nyeondrive.exception.error.ForbiddenException;
 import com.example.nyeondrive.file.constant.FileType;
 import com.example.nyeondrive.file.vo.FileName;
 import jakarta.persistence.CascadeType;
@@ -75,7 +76,7 @@ public class File {
 
     @Builder
     public File(String fileName, String contentType, Long size, InputStream inputStream,
-                boolean isTrashed) {
+                boolean isTrashed, UUID ownerId) {
         this.fileName = new FileName(fileName);
         this.contentType = contentType;
         this.size = size;
@@ -86,6 +87,7 @@ public class File {
                 .descendant(this)
                 .depth(0L)
                 .build());
+        this.ownerId = ownerId;
     }
 
     public static File createDrive(UUID userId) {
@@ -234,6 +236,9 @@ public class File {
      */
     public void validContainable(File file) {
         log.info("validContainable");
+        if (!isOwner(file.ownerId)) {
+            throw new ForbiddenException("new parent's owner is not match");
+        }
         if (isTrashed()) {
             throw new BadRequestException("new parent is trashed");
         }
@@ -301,5 +306,9 @@ public class File {
         return this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer()
                 .getPersistentClass()
                 .hashCode() : getClass().hashCode();
+    }
+
+    public boolean isOwner(UUID userId) {
+        return ownerId.equals(userId);
     }
 }

@@ -8,7 +8,6 @@ import com.example.nyeondrive.file.dto.service.FileFilterDto;
 import com.example.nyeondrive.file.dto.service.FileOrderDto;
 import com.example.nyeondrive.file.dto.service.FilePagingDto;
 import com.example.nyeondrive.file.entity.File;
-import com.example.nyeondrive.file.entity.FileClosure;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.ComparableExpressionBase;
@@ -16,6 +15,7 @@ import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -40,8 +40,8 @@ public class FileRepositoryCustomImpl implements FileRepositoryCustom {
     public List<File> findAll(
             FileFilterDto fileFilterDto,
             FilePagingDto filePagingDto,
-            List<FileOrderDto> fileOrderDtos
-    ) {
+            List<FileOrderDto> fileOrderDtos,
+            UUID userId) {
         JPAQuery<File> query = queryFactory
                 .select(file)
                 .from(file)
@@ -51,7 +51,8 @@ public class FileRepositoryCustomImpl implements FileRepositoryCustom {
                         nameEq(fileFilterDto.name()),
                         contentTypeEq(fileFilterDto.contentType()),
                         isTrashedEq(fileFilterDto.isTrashed()),
-                        parentIdEq(fileFilterDto.parentId())
+                        parentIdEq(fileFilterDto.parentId()),
+                        ownerIdEq(userId)
                 )
                 .orderBy(getOrderSpecifiers(fileOrderDtos));
         if (filePagingDto.isEmpty()) {
@@ -62,6 +63,10 @@ public class FileRepositoryCustomImpl implements FileRepositoryCustom {
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
+    }
+
+    private BooleanExpression ownerIdEq(UUID userId) {
+        return userId != null ? file.ownerId.eq(userId) : null;
     }
 
     private BooleanExpression parentIdEq(Long parentId) {

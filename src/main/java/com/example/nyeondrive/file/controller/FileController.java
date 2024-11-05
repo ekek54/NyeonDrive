@@ -14,6 +14,7 @@ import com.example.nyeondrive.file.service.FileService;
 import com.example.nyeondrive.file.service.StorageService;
 import java.util.List;
 import java.util.UUID;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
@@ -30,6 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/files")
 @Validated
+@Slf4j
 public class FileController {
     private final FileService fileService;
     private final StorageService storageService;
@@ -41,9 +43,20 @@ public class FileController {
 
     @PostMapping
     public ResponseEntity<FileResponseDto> createFile(
-            @Validated @RequestBody CreateFileRequestDto createFileRequestDto) {
+            @Validated @RequestBody CreateFileRequestDto createFileRequestDto,
+            @AuthenticationPrincipal UUID userId
+    ) {
         CreateFileDto createFileDto = createFileRequestDto.toCreateFileDto();
-        FileDto fileDto = fileService.createFile(createFileDto);
+        FileDto fileDto = fileService.createFile(createFileDto, userId);
+        return ResponseEntity.ok()
+                .body(FileResponseDto.of(fileDto));
+    }
+
+    @GetMapping(value = "/drive")
+    public ResponseEntity<FileResponseDto> getDrive(
+            @AuthenticationPrincipal UUID userId
+    ) {
+        FileDto fileDto = fileService.findDrive(userId);
         return ResponseEntity.ok()
                 .body(FileResponseDto.of(fileDto));
     }
@@ -61,10 +74,11 @@ public class FileController {
     @PatchMapping(path = "/{fileId}")
     public ResponseEntity<FileResponseDto> updateFile(
             @PathVariable("fileId") Long fileId,
-            @RequestBody UpdateFileRequestDto updateFileRequestDto
+            @RequestBody UpdateFileRequestDto updateFileRequestDto,
+            @AuthenticationPrincipal UUID userId
     ) {
         UpdateFileDto updateFileDto = updateFileRequestDto.toUpdateFileDto();
-        FileDto fileDto = fileService.updateFile(fileId, updateFileDto);
+        FileDto fileDto = fileService.updateFile(fileId, updateFileDto, userId);
         return ResponseEntity.ok()
                 .body(FileResponseDto.of(fileDto));
     }
@@ -91,18 +105,25 @@ public class FileController {
 //    }
 
     @GetMapping(path = "/{fileId}")
-    public ResponseEntity<FileResponseDto> getFile(@PathVariable("fileId") Long fileId) {
-        FileDto fileDto = fileService.findFile(fileId);
+    public ResponseEntity<FileResponseDto> getFile(
+            @PathVariable("fileId") Long fileId,
+            @AuthenticationPrincipal UUID userId
+    ) {
+        FileDto fileDto = fileService.findFile(fileId, userId);
         return ResponseEntity.ok()
                 .body(FileResponseDto.of(fileDto));
     }
 
     @GetMapping
-    public ResponseEntity<List<FileResponseDto>> listFile(@ModelAttribute ListFileRequestDto ListFileRequestDto) {
+    public ResponseEntity<List<FileResponseDto>> listFile(
+            @ModelAttribute ListFileRequestDto ListFileRequestDto,
+            @AuthenticationPrincipal UUID userId
+    ) {
         FileFilterDto fileFilterDto = ListFileRequestDto.toFileFilterDto();
         FilePagingDto filePagingDto = ListFileRequestDto.toFilePagingDto();
         List<FileOrderDto> fileOrderDtos = ListFileRequestDto.toFileOrderDtos();
-        List<FileResponseDto> files = fileService.listFile(fileFilterDto, filePagingDto, fileOrderDtos).stream()
+        List<FileResponseDto> files = fileService.listFile(fileFilterDto, filePagingDto, fileOrderDtos, userId)
+                .stream()
                 .map(FileResponseDto::of)
                 .toList();
         return ResponseEntity.ok()
@@ -110,8 +131,11 @@ public class FileController {
     }
 
     @DeleteMapping(path = "/{fileId}")
-    public ResponseEntity<Void> deleteFile(@PathVariable("fileId") Long fileId) {
-        fileService.deleteFile(fileId);
+    public ResponseEntity<Void> deleteFile(
+            @PathVariable("fileId") Long fileId,
+            @AuthenticationPrincipal UUID userId
+    ) {
+        fileService.deleteFile(fileId, userId);
         return ResponseEntity.noContent()
                 .build();
     }
