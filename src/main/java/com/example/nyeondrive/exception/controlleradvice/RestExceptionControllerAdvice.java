@@ -1,5 +1,6 @@
 package com.example.nyeondrive.exception.controlleradvice;
 
+import com.example.nyeondrive.exception.error.ForbiddenException;
 import com.example.nyeondrive.exception.error.NotFoundException;
 import com.example.nyeondrive.exception.response.ErrorResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -38,5 +39,12 @@ public class RestExceptionControllerAdvice {
         log.error("Unhandled Exception occurred: {}", e.getMessage());
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(new ErrorResponse("Internal Server Error occurred. Please try again later."));
+    }
+
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<ErrorResponse> handleForbiddenException(ForbiddenException e) {
+        log.error("Forbidden exception occurred: {}", e.getMessage());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(new ErrorResponse(e.getMessage()));
     }
 }
