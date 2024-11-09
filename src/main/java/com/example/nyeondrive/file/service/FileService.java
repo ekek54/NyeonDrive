@@ -210,7 +210,7 @@ public class FileService {
     public void deleteFile(Long fileId, UUID userId) {
         File file = fileRepository.findWithAncestorClosuresById(fileId)
                 .orElseThrow(() -> new NotFoundException("File not found"));
-        if (file.isOwner(userId)) {
+        if (!file.isOwner(userId)) {
             throw new ForbiddenException("User is not owner");
         }
         if (file.isDrive()) {
