@@ -1,6 +1,7 @@
 package com.example.nyeondrive.file.repository;
 
 import com.example.nyeondrive.file.entity.File;
+import com.example.nyeondrive.file.vo.FileName;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -25,4 +26,6 @@ public interface FileRepository extends JpaRepository<File, Long>, FileRepositor
     List<File> findAllWithAncestorClosuresByIdIn(Collection<Long> id);
 
     List<File> findAllByIdIn(List<Long> descendantIds);
+
+    Optional<File> findByFileNameAndOwnerId(FileName fileName, UUID ownerId);
 }

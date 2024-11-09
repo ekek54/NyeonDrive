@@ -13,7 +13,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.Transient;
 import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -70,17 +69,13 @@ public class File {
     @OneToMany(mappedBy = "ancestor")
     private final List<FileClosure> descendantClosures = new ArrayList<>();
 
-    @Transient
-    private InputStream inputStream;
-
 
     @Builder
-    public File(String fileName, String contentType, Long size, InputStream inputStream,
+    public File(FileName fileName, String contentType, Long size, InputStream inputStream,
                 boolean isTrashed, UUID ownerId) {
-        this.fileName = new FileName(fileName);
+        this.fileName = fileName;
         this.contentType = contentType;
         this.size = size;
-        this.inputStream = inputStream;
         this.isTrashed = isTrashed;
         ancestorClosures.add(FileClosure.builder()
                 .ancestor(this)

@@ -9,13 +9,18 @@ import com.example.nyeondrive.file.dto.service.FileDto;
 import com.example.nyeondrive.file.dto.service.FileFilterDto;
 import com.example.nyeondrive.file.dto.service.FileOrderDto;
 import com.example.nyeondrive.file.dto.service.FilePagingDto;
+import com.example.nyeondrive.file.dto.service.StreamUploadFileDto;
 import com.example.nyeondrive.file.dto.service.UpdateFileDto;
 import com.example.nyeondrive.file.entity.File;
+import com.example.nyeondrive.file.infrastructure.FileStorage;
 import com.example.nyeondrive.file.repository.FileRepository;
 import com.example.nyeondrive.file.vo.FileName;
 import jakarta.transaction.Transactional;
+import java.io.InputStream;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -24,16 +29,18 @@ import org.springframework.stereotype.Service;
 @Transactional
 public class FileService {
     private final FileRepository fileRepository;
+    private final FileStorage fileStorage;
 
-    public FileService(FileRepository fileRepository) {
+    public FileService(FileRepository fileRepository, FileStorage fileStorage) {
         this.fileRepository = fileRepository;
+        this.fileStorage = fileStorage;
     }
 
     /**
      * 파일 생성 조상 파일과 클로저를 생성한다.
      *
      * @param createFileDto : 파일 생성 정보
-     * @param userId : 사용자 아이디
+     * @param userId        : 사용자 아이디
      * @return: 생성된 파일
      */
     public FileDto createFile(CreateFileDto createFileDto, UUID userId) {
@@ -43,7 +50,7 @@ public class FileService {
 
         // 파일 생성
         File file = File.builder()
-                .fileName(createFileDto.name())
+                .fileName(new FileName(createFileDto.name()))
                 .ownerId(userId)
                 .contentType(createFileDto.contentType())
                 .isTrashed(createFileDto.isTrashed())
@@ -54,10 +61,7 @@ public class FileService {
     }
 
     /**
-     * 파일 조회
-     * 파일이 삭제 상태인지 확인
-     * 파일 소유자인지 확인
-     * 상위 폴더가 삭제 상태인지 확인
+     * 파일 조회 파일이 삭제 상태인지 확인 파일 소유자인지 확인 상위 폴더가 삭제 상태인지 확인
      *
      * @param fileId : 조회 할 파일 아이디
      * @param userId : 요청 사용자 아이디
@@ -109,6 +113,12 @@ public class FileService {
         }
         File drive = File.createDrive(userId);
         fileRepository.save(drive);
+        try {
+            fileStorage.createStorage(userId);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to create storage", e);
+        }
         return FileDto.of(drive);
     }
 
@@ -137,7 +147,7 @@ public class FileService {
                 file.trash();
             } else {
                 // 파일 복원시 부모가 삭제 상태인 경우 드라이브에 복원
-                if(file.isAncestorTrashed()) {
+                if (file.isAncestorTrashed()) {
                     moveFile(file, file.getDrive().getId());
                 }
                 file.restore();
@@ -210,5 +220,41 @@ public class FileService {
         descendants.forEach(File::clearAncestorClosures);
         fileRepository.flush();
         fileRepository.deleteAllInBatch(descendants);
+    }
+
+    public FileDto streamUploadFile(StreamUploadFileDto streamUploadFileDto, InputStream fileInputStream, UUID userId) {
+        Optional<File> byFileNameAndOwnerId = fileRepository
+                .findByFileNameAndOwnerId(FileName.todayTmpFolderName(), userId);
+        File tmpFolder = byFileNameAndOwnerId.orElseGet(() -> createTodayTmpFolder(userId));
+        File tmpFile = File.builder()
+                .fileName(FileName.generateTmpFileName())
+                .ownerId(userId)
+                .contentType(streamUploadFileDto.contentType())
+                .isTrashed(streamUploadFileDto.isTrashed())
+                .size(streamUploadFileDto.contentLength())
+                .build();
+        tmpFile.moveTo(tmpFolder);
+        fileRepository.save(tmpFile);
+        try {
+            fileStorage.streamUpload(tmpFile, fileInputStream, userId);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to upload file on storage", e);
+        }
+        return FileDto.of(fileRepository.save(tmpFile));
+    }
+
+    private @NonNull File createTodayTmpFolder(UUID userId) {
+        File driveNotFound = fileRepository.findByOwnerIdAndContentType(userId, FileType.DRIVE_CONTENT_TYPE)
+                .orElseThrow(() -> new BadRequestException("Drive should be created first"));
+        File newTmpFolder = File.builder()
+                .fileName(FileName.todayTmpFolderName())
+                .ownerId(userId)
+                .contentType(FileType.FOLDER_CONTENT_TYPE)
+                .isTrashed(false)
+                .build();
+        newTmpFolder.moveTo(driveNotFound);
+        fileRepository.save(newTmpFolder);
+        return newTmpFolder;
     }
 }
