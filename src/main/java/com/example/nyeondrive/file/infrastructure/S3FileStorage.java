@@ -2,10 +2,9 @@ package com.example.nyeondrive.file.infrastructure;
 
 import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
-import com.example.nyeondrive.exception.error.BadRequestException;
+import com.example.nyeondrive.exception.error.infrastructure.StorageException;
 import com.example.nyeondrive.file.entity.File;
 import java.io.InputStream;
 import java.util.UUID;
@@ -38,16 +37,14 @@ public class S3FileStorage implements FileStorage {
         );
         try {
             s3.putObject(req);
-        } catch (AmazonS3Exception e) {
-            throw new RuntimeException("Failed to upload file on S3");
         } catch (SdkClientException e) {
-            throw new RuntimeException("Failed to connect to S3");
+            throw new StorageException("Failed to upload file to S3", e);
         }
     }
 
     public void createStorage(UUID userId) {
         if (s3.doesBucketExistV2(userId.toString())) {
-            throw new BadRequestException("Bucket already exists");
+            throw new IllegalStateException("Bucket duplicate creation");
         }
         s3.createBucket(userId.toString());
     }

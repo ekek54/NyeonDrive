@@ -238,7 +238,6 @@ public class FileService {
         try {
             fileStorage.streamUpload(tmpFile, fileInputStream, userId);
         } catch (Exception e) {
-            e.printStackTrace();
             throw new RuntimeException("Failed to upload file on storage", e);
         }
         return FileDto.of(fileRepository.save(tmpFile));
@@ -257,4 +256,6 @@ public class FileService {
         fileRepository.save(newTmpFolder);
         return newTmpFolder;
     }
+
+
 }

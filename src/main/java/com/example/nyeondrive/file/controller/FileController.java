@@ -101,7 +101,7 @@ public class FileController {
             return ResponseEntity.ok()
                     .body(FileResponseDto.of(tmpFile));
         } catch (IOException e) {
-            throw new RuntimeException("Error occurred while uploading file stream", e);
+            throw new IllegalStateException("Error occurred while read file stream", e);
         }
     }
 
