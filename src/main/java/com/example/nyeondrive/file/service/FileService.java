@@ -16,6 +16,7 @@ import com.example.nyeondrive.file.infrastructure.FileStorage;
 import com.example.nyeondrive.file.repository.FileRepository;
 import com.example.nyeondrive.file.vo.FileName;
 import jakarta.transaction.Transactional;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Optional;
@@ -23,6 +24,7 @@ import java.util.UUID;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @Service
@@ -222,7 +224,7 @@ public class FileService {
         fileRepository.deleteAllInBatch(descendants);
     }
 
-    public FileDto streamUploadFile(StreamUploadFileDto streamUploadFileDto, InputStream fileInputStream, UUID userId) {
+    public FileDto uploadFile(StreamUploadFileDto streamUploadFileDto, InputStream fileInputStream, UUID userId) {
         Optional<File> byFileNameAndOwnerId = fileRepository
                 .findByFileNameAndOwnerId(FileName.todayTmpFolderName(), userId);
         File tmpFolder = byFileNameAndOwnerId.orElseGet(() -> createTodayTmpFolder(userId));
@@ -235,11 +237,7 @@ public class FileService {
                 .build();
         tmpFile.moveTo(tmpFolder);
         fileRepository.save(tmpFile);
-        try {
-            fileStorage.streamUpload(tmpFile, fileInputStream, userId);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to upload file on storage", e);
-        }
+        fileStorage.streamUpload(tmpFile, fileInputStream, userId);
         return FileDto.of(fileRepository.save(tmpFile));
     }
 
@@ -258,4 +256,23 @@ public class FileService {
     }
 
 
+    public FileDto uploadFile(CreateFileDto createFileRequestDto, MultipartFile filePart, UUID userId) {
+        File parent = fileRepository
+                .findById(createFileRequestDto.parentId()).orElseThrow(() -> new NotFoundException("Parent not found"));
+        File file = File.builder()
+                .fileName(new FileName(createFileRequestDto.name()))
+                .ownerId(userId)
+                .contentType(createFileRequestDto.contentType())
+                .isTrashed(createFileRequestDto.isTrashed())
+                .size(filePart.getSize())
+                .build();
+        file.moveTo(parent);
+        fileRepository.save(file);
+        try {
+            fileStorage.streamUpload(file, filePart.getInputStream(), userId);
+        } catch (IOException e) {
+            throw new IllegalStateException("Error occurred while read file stream");
+        }
+        return FileDto.of(fileRepository.save(file));
+    }
 }

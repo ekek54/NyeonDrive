@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
@@ -29,7 +30,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/files")
@@ -97,13 +100,26 @@ public class FileController {
                 false
         );
         try {
-            FileDto tmpFile = fileService.streamUploadFile(streamUploadFileDto, request.getInputStream(), userId);
+            FileDto tmpFile = fileService.uploadFile(streamUploadFileDto, request.getInputStream(), userId);
             return ResponseEntity.ok()
                     .body(FileResponseDto.of(tmpFile));
         } catch (IOException e) {
             throw new IllegalStateException("Error occurred while read file stream", e);
         }
     }
+
+    @PostMapping(params = "uploadType=multipart", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<FileResponseDto> multipartUpload(
+            @RequestPart(value = "metadata", required = true) CreateFileRequestDto createFileRequestDto,
+            @RequestPart(value = "file", required = true) MultipartFile filePart,
+            @AuthenticationPrincipal UUID userId
+    ) {
+        CreateFileDto createFileDto = createFileRequestDto.toCreateFileDto();
+        FileDto file = fileService.uploadFile(createFileDto, filePart, userId);
+        return ResponseEntity.ok()
+                .body(FileResponseDto.of(file));
+    }
+
 
     @GetMapping(path = "/{fileId}")
     public ResponseEntity<FileResponseDto> getFile(

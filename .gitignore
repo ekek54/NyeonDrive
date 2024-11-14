@@ -7,6 +7,7 @@ build/
 
 # Ignore application properties
 /**/application.properties
+/**/http
 
 ### STS ###
 .apt_generated
