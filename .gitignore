@@ -7,6 +7,7 @@ build/
 
 # Ignore application properties
 /**/application.properties
+/**/http
 
 ### STS ###
 .apt_generated
@@ -42,3 +43,5 @@ out/
 
 ### QueryDSL ###
 /src/main/generated/
+
+/src/main/resources/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports

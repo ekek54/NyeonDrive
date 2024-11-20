@@ -3,11 +3,13 @@ package com.example.nyeondrive.file.constant;
 import java.util.List;
 
 public enum FileType {
-    FILE, DIRECTORY;
-    private static final List<String> directoryContentTypes = List.of("directory", "drive", "folder");
+    FILE, FOLDER, DRIVE;
+    public static final String DRIVE_CONTENT_TYPE = "drive";
+    public static final String FOLDER_CONTENT_TYPE = "folder";
+    private static final List<String> directoryContentTypes = List.of(DRIVE_CONTENT_TYPE, FOLDER_CONTENT_TYPE);
 
     public boolean isDirectory() {
-        return this == DIRECTORY;
+        return this == FOLDER || this == DRIVE;
     }
 
     public boolean isFile() {
@@ -16,7 +18,7 @@ public enum FileType {
 
     public static FileType of(String contentType) {
         if (directoryContentTypes.contains(contentType)) {
-            return DIRECTORY;
+            return FOLDER;
         }
         return FILE;
     }

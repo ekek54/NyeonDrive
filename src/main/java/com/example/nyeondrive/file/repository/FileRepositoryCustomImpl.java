@@ -1,6 +1,7 @@
 package com.example.nyeondrive.file.repository;
 
 import static com.example.nyeondrive.file.entity.QFile.file;
+import static com.example.nyeondrive.file.entity.QFileClosure.fileClosure;
 
 import com.example.nyeondrive.file.constant.FileOrderField;
 import com.example.nyeondrive.file.dto.service.FileFilterDto;
@@ -14,12 +15,15 @@ import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Repository;
 
 @Repository
+@RequiredArgsConstructor
 public class FileRepositoryCustomImpl implements FileRepositoryCustom {
     private final JPAQueryFactory queryFactory;
     private static final Map<FileOrderField, ComparableExpressionBase<?>> orderFieldMap = Map.of(
@@ -32,24 +36,23 @@ public class FileRepositoryCustomImpl implements FileRepositoryCustom {
             FileOrderField.TRASHED, file.isTrashed
     );
 
-    public FileRepositoryCustomImpl(JPAQueryFactory queryFactory) {
-        this.queryFactory = queryFactory;
-    }
-
     @Override
     public List<File> findAll(
             FileFilterDto fileFilterDto,
             FilePagingDto filePagingDto,
-            List<FileOrderDto> fileOrderDtos
-    ) {
+            List<FileOrderDto> fileOrderDtos,
+            UUID userId) {
         JPAQuery<File> query = queryFactory
                 .select(file)
                 .from(file)
+                .join(file.ancestorClosures)
+                .fetchJoin()
                 .where(
                         nameEq(fileFilterDto.name()),
-                        parentIdEq(fileFilterDto.parentId()),
                         contentTypeEq(fileFilterDto.contentType()),
-                        isTrashedEq(fileFilterDto.isTrashed())
+                        isTrashedEq(fileFilterDto.isTrashed()),
+                        parentIdEq(fileFilterDto.parentId()),
+                        ownerIdEq(userId)
                 )
                 .orderBy(getOrderSpecifiers(fileOrderDtos));
         if (filePagingDto.isEmpty()) {
@@ -62,16 +65,24 @@ public class FileRepositoryCustomImpl implements FileRepositoryCustom {
                 .fetch();
     }
 
+    private BooleanExpression ownerIdEq(UUID userId) {
+        return userId != null ? file.ownerId.eq(userId) : null;
+    }
+
+    private BooleanExpression parentIdEq(Long parentId) {
+        return parentId != null ?  fileClosure.ancestor.id.eq(parentId).and(depthEq(1L)): null;
+    }
+
+    private BooleanExpression depthEq(Long depth) {
+        return depth != null ? fileClosure.depth.eq(depth) : null;
+    }
+
     private BooleanExpression isTrashedEq(Boolean isTrashed) {
         return isTrashed != null ? file.isTrashed.eq(isTrashed) : null;
     }
 
     private BooleanExpression contentTypeEq(String contentType) {
         return contentType != null ? file.contentType.eq(contentType) : null;
-    }
-
-    private BooleanExpression parentIdEq(Long parentId) {
-        return parentId != null ? file.parent.id.eq(parentId) : null;
     }
 
     private BooleanExpression nameEq(String name) {

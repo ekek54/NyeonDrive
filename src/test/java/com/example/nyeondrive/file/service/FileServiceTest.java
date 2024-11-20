@@ -3,10 +3,10 @@ package com.example.nyeondrive.file.service;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.example.nyeondrive.file.dto.service.CreateFileDto;
+import com.example.nyeondrive.file.dto.service.FileDto;
 import com.example.nyeondrive.file.dto.service.UpdateFileDto;
 import com.example.nyeondrive.file.entity.File;
 import com.example.nyeondrive.file.repository.FileRepository;
-import com.example.nyeondrive.file.service.FileService;
 import com.example.nyeondrive.file.vo.FileName;
 import java.util.Optional;
 import org.assertj.core.api.Assertions;
@@ -17,14 +17,16 @@ import org.mockito.Mockito;
 
 class FileServiceTest {
     FileRepository fileRepository = Mockito.mock(FileRepository.class);
-    FileService fileService = new FileService(fileRepository);
+    FileClosureRepository fileClosureRepository = Mockito.mock(FileClosureRepository.class);
+    FileService fileService = new FileService(fileRepository, fileClosureRepository);
     File root;
     File textFile;
     File folder;
 
     @BeforeEach
     void setUp() {
-        root = File.createRootFolder();
+
+        root = File.createDrive(userId);
         textFile = File.builder().fileName("text.txt").contentType("plain/text").size(100L).parent(root)
                 .isTrashed(false).build();
         folder = File.builder().fileName("folder").contentType("folder").size(100L).parent(root).isTrashed(false)
@@ -38,7 +40,7 @@ class FileServiceTest {
         CreateFileDto createFileDto = new CreateFileDto("test", 1L, "folder", false);
         Mockito.when(fileRepository.findById(1L)).thenReturn(Optional.of(root));
         // when
-        File file = fileService.createFile(createFileDto);
+        FileDto file = fileService.createFile(createFileDto);
         // then
         Mockito.verify(fileRepository).save(file);
     }

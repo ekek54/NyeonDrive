@@ -33,9 +33,11 @@ dependencies {
 
 
 	// AWS SDK
-	implementation platform('software.amazon.awssdk:bom:2.21.1')
-	implementation 'software.amazon.awssdk:s3'
-	implementation 'software.amazon.awssdk:apache-client'
+	implementation platform('com.amazonaws:aws-java-sdk-bom:1.11.238')
+	implementation 'com.amazonaws:aws-java-sdk-s3'
+	//
+	implementation 'javax.xml.bind:jaxb-api:2.3.1'
+	implementation 'org.glassfish.jaxb:jaxb-runtime:2.3.1'
 
 	// QueryDSL
 	implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
@@ -46,6 +48,10 @@ dependencies {
 	// SpringSecurity
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+
+	//p6spy
+	implementation 'p6spy:p6spy:3.9.1'
+	implementation 'com.github.gavlyukovskiy:datasource-decorator-spring-boot-autoconfigure:1.9.0'
 
 }
 

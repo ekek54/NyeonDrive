@@ -22,9 +22,6 @@ public record CreateFileRequestDto(
     }
 
     private boolean isTrashedIfNullIsFalse() {
-        if (isTrashed == null) {
-            return false;
-        }
-        return isTrashed;
+        return isTrashed != null && isTrashed;
     }
 }
